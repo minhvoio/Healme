@@ -3,10 +3,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var mysql = require('mysql');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var clinicRouter = require('./routes/clinic');
+var pharmacyRouter = require('./routes/pharmacy');
+var branchRouter = require('./routes/branch');
 const { config } = require('process');
 
 var app = express();
@@ -23,25 +25,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
-// setup listen port
-var port = 3000
-app.listen(port, function() {
-    console.log('Server started on port ' + port);
-});
-
-// configure mysql connection
-var connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "ThaiSon-2001",
-  database: "healthcare"
-});
-
-connection.connect(function(err) {
-  if (err) throw err;
-  console.log("Connection established")
-});
+app.use('/clinic', clinicRouter);
+app.use('/pharmacy', pharmacyRouter);
+app.use('/branch', branchRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

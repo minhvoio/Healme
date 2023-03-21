@@ -4,14 +4,14 @@ var router = express.Router();
 
 var connection = require('../models/dbconfig');
 
-/* GET branch listing. */
-router.get('/:pharmacyID', function(req, res, next) {
-  var fields = "br.*";
-  var source = "pharmacy_branch br"
-  var condition = "br.business_id = ?";
+/* GET medicine listing. */
+router.get('/:branchID', function(req, res, next) {
+  var fields = "med.title, bm.stock, bm.price";
+  var source = "branch_medicine bm join medicine med on bm.medicine_id = med.id"
+  var condition = "bm.branch_id = ?";
   var query = "select " + fields + " from "
     + source + " where " + condition;
-  connection.query(query, req.params.pharmacyID, 
+  connection.query(query, req.params.branchID, 
     function (err, result, fields) {
       if (err) throw err;
       console.log(result);
