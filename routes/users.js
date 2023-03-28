@@ -111,17 +111,22 @@ router.post("/api/get-user", signupValidation, (req, res, next) => {
     }
     const theToken = req.headers.authorization.split(" ")[1];
     const decoded = jwt.verify(theToken, "the-super-strong-secrect");
-    
+
     connection.query(
-      "SELECT * FROM users where id=?",
+      "SELECT * FROM users where id = ?",
       decoded.id,
       function (error, results, fields) {
         if (error) throw error;
-        return res.send({
-          error: false,
-          data: results[0],
-          message: "Fetch Successfully.",
-        });
+        connection.query("SELECT * FROM roles WHERE id = ?", results[0].role_id, (roleErr, roleRes) => {
+          if (roleErr) throw roleErr;
+          const roleTitle = roleRes[0].title;
+          results[0].role = roleTitle;
+          return res.send({
+            error: false,
+            data: results[0],
+            message: "Fetch Successfully.",
+          });
+        })
       }
     );
   });
