@@ -1,5 +1,10 @@
 var express = require('express');
 var router = express.Router();
+const { signupValidation, loginValidation } = require('../models/validation');
+const { validationResult } = require('express-validator');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 var connection = require('../models/dbconfig')
 
 /* GET users listing. */
@@ -36,5 +41,89 @@ router.post('/:userid/update', function(req, res) {
         res.send(result);
     })
 })
+
+// const checking = app.use((req, res, next) => {
+//     console.log(`Incoming ${req.method} request to ${req.url}`);
+//     next();
+// });
+
+router.get('/api/login', (req, res) => {
+    res.send('This is the login page');
+});
+
+router.post('/api/login', loginValidation, (req, res) => {
+  var params = [req.body.email];
+    var query = 'SELECT * FROM users WHERE email = ?'
+    var params = [req.body.email, req.body.password];
+    connection.query(query, params, function(err, result){
+        if(err) {
+          // throw err;
+          return res.status(400).send({
+            msg: err,
+          });
+        }
+        if (!result.length) {
+          return res.status(401).send({
+            msg: "Email or password is incorrect!",
+          });
+        }
+        // check password
+        bcrypt.compare(
+        req.body.password,
+        result[0]["pass"], (bErr, bResult) => {
+          if (bErr) {
+            // throw bErr;
+            return res.status(401).send({
+                msg: "Email or password is incorrect!",
+            });
+          }
+          if (bResult) {
+            const token = jwt.sign(
+                { id: result[0].id },
+                "the-super-strong-secrect",
+                { expiresIn: "1h" }
+            );
+            connection.query(
+                `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`
+            );
+            return res.status(200).send({
+                msg: "Logged in!",
+                token,
+                user: result[0],
+            });
+            }
+          return res.status(401).send({
+              msg: "Username or password is incorrect!",
+          });
+        })
+    })
+});
+  
+router.post("/api/get-user", signupValidation, (req, res, next) => {
+    if (
+      !req.headers.authorization ||
+      !req.headers.authorization.startsWith("Bearer") ||
+      !req.headers.authorization.split(" ")[1]
+    ) {
+      return res.status(422).json({
+        message: "Please provide the token",
+      });
+    }
+    const theToken = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(theToken, "the-super-strong-secrect");
+    
+    connection.query(
+      "SELECT * FROM users where id=?",
+      decoded.id,
+      function (error, results, fields) {
+        if (error) throw error;
+        return res.send({
+          error: false,
+          data: results[0],
+          message: "Fetch Successfully.",
+        });
+      }
+    );
+  });
 
 module.exports = router;
