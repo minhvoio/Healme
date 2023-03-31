@@ -42,15 +42,6 @@ router.post('/:userid/update', function(req, res) {
     })
 })
 
-// const checking = app.use((req, res, next) => {
-//     console.log(`Incoming ${req.method} request to ${req.url}`);
-//     next();
-// });
-
-router.get('/api/login', (req, res) => {
-    res.send('This is the login page');
-});
-
 router.post('/api/login', loginValidation, (req, res) => {
   var params = [req.body.email];
     var query = 'SELECT * FROM users WHERE email = ?'
@@ -99,7 +90,8 @@ router.post('/api/login', loginValidation, (req, res) => {
     })
 });
   
-router.post("/api/get-user", signupValidation, (req, res, next) => {
+//signupValidation
+router.post("/api/get-user", (req, res, next) => {
     if (
       !req.headers.authorization ||
       !req.headers.authorization.startsWith("Bearer") ||
