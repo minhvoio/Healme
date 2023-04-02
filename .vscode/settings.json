@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/7fdb94f0-e8e2-4d93-9b90-5a6531afbc68/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/Healme",
+  "appService.deploySubpath": "."
+}
