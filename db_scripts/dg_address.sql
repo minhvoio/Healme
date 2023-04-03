@@ -52,3 +52,11 @@ INSERT INTO address(id, fulladdress, ward_id, created_date) VALUES
 (48, 'Số Nhà, Đường', 158, '2023-03-16 09:48:17'),
 (49, 'Số Nhà, Đường', 253, '2023-03-16 22:25:30'),
 (50, 'Số Nhà, Đường', 59, '2023-03-16 02:45:15');
+
+set sql_safe_updates = 0;
+update address addr
+	left join ward wrd on addr.ward_id = wrd.id
+    left join district dist on wrd.district_id = dist.id
+    left join province prvn on dist.province_id = prvn.id
+set fulladdress = concat_ws(', ', addr.fulladdress, wrd.title, dist.title, prvn.name);
+set sql_safe_updates = 1;
