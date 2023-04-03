@@ -163,3 +163,8 @@ INSERT INTO ward(title, district_id, created_date) VALUES
 ('Phường 08', 22, '2023-03-15 00:00:52'),
 ('Phường 14', 22, '2023-03-15 00:00:36'),
 ('Phường 12', 22, '2023-03-15 00:00:10');
+
+set sql_safe_updates = 0;
+update ward
+set search_text = lower(title);
+set sql_safe_updates = 1;

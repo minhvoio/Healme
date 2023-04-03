@@ -20,6 +20,7 @@ create table users
     account_status tinyint unsigned,
     role_id tinyint unsigned,
     created_date datetime,
+    last_login datetime,
     constraint fk_users_roles foreign key(role_id) references roles(id)
 );
 
@@ -107,31 +108,9 @@ create table medicine
 (
 	id bigint unsigned primary key auto_increment,
     title text,
-    created_date datetime
-);
-
-create table ingredient
-(
-	id bigint unsigned primary key auto_increment,
-    title text,
-    created_date datetime
-);
-
-create table medicine_ingredient
-(
-	id bigint unsigned primary key auto_increment,
-    medicine_id bigint unsigned,
-    ingredient_id bigint unsigned,
-    amount float,
-    created_date datetime,
-    constraint fk_med_ingredient foreign key(ingredient_id) references ingredient(id),
-    constraint fk_ingredient_med foreign key(medicine_id) references medicine(id)
-);
-
-create table symptom
-(
-	id bigint unsigned primary key auto_increment,
-    descr text,
+    ingredients text,
+    supplier varchar(512),
+    search_text text,
     created_date datetime
 );
 
@@ -139,17 +118,8 @@ create table department
 (
 	id bigint unsigned primary key auto_increment,
     title varchar(255),
+    search_text text,
     created_date datetime
-);
-
-create table symptom_department
-(
-	id bigint unsigned primary key auto_increment,
-    symp_id bigint unsigned,
-    dept_id bigint unsigned,
-    created_date datetime,
-    constraint fk_dept_symp foreign key(symp_id) references symptom(id),
-    constraint fk_symp_dept foreign key(dept_id) references department(id)
 );
 
 create table doctor_department
@@ -177,10 +147,9 @@ create table prescription_details
 	id bigint unsigned primary key auto_increment,
     pres_id bigint unsigned,
     med_id bigint unsigned,
-    dosage int unsigned,
-    duration int unsigned,
     note text,
     created_date datetime,
+    status tinyint unsigned,
     constraint fk_pd_pres foreign key(pres_id) references prescription(id),
     constraint fk_pd_med foreign key(med_id) references medicine(id)
 );
@@ -188,12 +157,20 @@ create table prescription_details
 create table patient_history
 (
 	id bigint unsigned primary key auto_increment,
-    pt_id bigint unsigned,
-    symp_id bigint unsigned,
-    pt_status tinyint unsigned,
+    appt_id bigint unsigned,
+    diagnosis text,
+    prescription_id bigint unsigned,
     created_date datetime,
+    status tinyint unsigned,
     constraint fk_hist_pt foreign key(pt_id) references patient(id),
-	constraint fk_hist_symp foreign key(symp_id) references symptom(id)
+	constraint fk_hist_appt foreign key(appt_id) references doctor_appointment(id),
+    constraint fk_hist_pres foreign key(prescription_id) references prescription(id)
+);
+
+create table appt_hour
+(
+	id int unsigned primary key auto_increment,
+    details varchar(255)
 );
 
 create table work_schedule
@@ -201,7 +178,7 @@ create table work_schedule
 	id bigint unsigned primary key auto_increment,
     doc_id bigint unsigned,
     workday date,
-    workhour enum('8:00 - 9:30', '9:30 - 11:00', '12:00 - 13:30', '13:30 - 15:00', '15:00 - 16:30', '16:30 - 18:00'),
+    status tinyint unsigned,
     created_date datetime,
     constraint fk_doc_schedule foreign key(doc_id) references business(id)
 );
@@ -211,14 +188,17 @@ create table doctor_appointment
 	id bigint unsigned primary key auto_increment,
     pt_id bigint unsigned,
     sched_id bigint unsigned,
+	hour_id int unsigned,
     created_date datetime,
     constraint fk_appt_pt foreign key(pt_id) references patient(id),
-    constraint fk_appt_sched foreign key(sched_id) references work_schedule(id)
+    constraint fk_appt_sched foreign key(sched_id) references work_schedule(id),
+    constraint fk_appt_hour foreign key(appt_hour) references appt_hour(id)
 );
 
 create table pharmacy_branch
 (
 	id bigint unsigned primary key auto_increment,
+    branch_name varchar(255),
     business_id bigint unsigned,
     user_id bigint unsigned,
     address_id bigint unsigned,
