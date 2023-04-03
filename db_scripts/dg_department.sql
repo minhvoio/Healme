@@ -21,10 +21,4 @@ INSERT INTO department(id, title, created_date) VALUES
 (17, 'Nhi', '2023-03-16 06:25:43'),
 (18, 'Sản phụ khoa', '2023-03-16 06:23:06'),
 (19, 'Tiêu hóa - Gan mật', '2023-03-16 00:00:06'),
-(20, 'Da liễu - Thẩm mỹ', '2023-03-16 23:53:31'),
-(21, 'Đa Khoa', '2023-03-16 23:53:31');
-
-set sql_safe_updates = 0;
-update department
-set search_text = lower(title);
-set sql_safe_updates = 1;
+(20, 'Da liễu - Thẩm mỹ', '2023-03-16 23:53:31');

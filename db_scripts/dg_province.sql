@@ -65,8 +65,3 @@ INSERT INTO province(id, name, created_date) VALUES
 (61, 'Tuyên Quang', '2023-03-15 15:38:34'),
 (62, 'Vĩnh Long', '2023-03-15 15:38:34'),
 (63, 'Yên Bái', '2023-03-15 15:38:34');
-
-set sql_safe_updates = 0;
-update province
-set search_text = lower(name);
-set sql_safe_updates = 1;
