@@ -1,7 +1,7 @@
 SET NAMES 'utf8mb4';
 USE healthcare;
 
-INSERT INTO medicine(...) VALUES
+INSERT INTO medicine(id, title, ingredients, med_type, supplier) VALUES
 ('1','Lufocin','Ciprofloxacin (dưới dạng Ciprofloxacin HCl) 500 mg','Viên nén bao phim','(Cơ sở nhận gia công): Công ty cổ phần dược phẩm Vimedimex 2'),
 ('2','Bromhexin','Bromhexin hydrochlorid 8mg','Viên nén (màu vàng)','(Cở sở nhận gia công): Chi nhánh công ty TNHH SX-TM dược phẩm Thành Nam'),
 ('3','Paracetamol','Paracetamol 500mg','Viên nén','(Cở sở nhận gia công): Chi nhánh công ty TNHH SX-TM dược phẩm Thành Nam'),
@@ -779,3 +779,8 @@ INSERT INTO medicine(...) VALUES
 ('775','Palset (Nhà sản xuất và đóng gói sơ cấp: Intas Pharmaceuticals Ltd. Địa chỉ: Plot No. 457-458, Village- Matoda, Bavla road, Dist.-Ahmedabad, India)','Mỗi lọ 5ml dung dịch chứa: Palonosetron (dưới dạng Palonosetron hydroclorid) 0,25 mg','Dung dịch tiêm','Nhà đóng gói cấp 2 và xuất xưởng: Công ty cổ phần dược phẩm Trung ương 1 - Pharbaco'),
 ('776','Abingem-1,4gm (Cơ sở sản xuất và đóng gói sơ cấp: Naprod life sciences pvt.ltd. Địa chỉ: 304, Town Centre, 3rd Floor, Andheri-Kurla Road, Near Mittal estate, Andheri (East), Mumbai-400059, India)','Gemcitabin (dưới dạng Gemcitabin hydrochlorid) 1,4 g','Bột đông khô pha tiêm','Nhà đóng gói cấp 2 và xuất xưởng: Công ty cổ phần dược phẩm Trung ương 1 - Pharbaco'),
 ('777','Zoledronic Acid Injection 0.8mg/ml (NSX và ÐG sơ cấp: Mylan Laboratories Limited [Specialty Formulation Facility]. Đ/c: No.19A, Plot No.284-B/1, Bommasandra-Jigani Link Road, Industrial Area, Anekal,','Mỗi lọ 5 ml dung dịch chứa: Acid zoledronic (dưới dạng Acid zoledronic monohydrat) 4 mg','Dung dịch tiêm','Nhà đóng gói cấp 2 và xuất xưởng: Công ty cổ phần dược phẩm Trung ương 1 - Pharbaco');
+
+set sql_safe_updates = 0;
+update medicine
+set search_text = lower(title);
+set sql_safe_updates = 1;

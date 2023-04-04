@@ -54,6 +54,7 @@ INSERT INTO users(id, username, pass, phone, email, account_status, role_id, cre
 (NULL, 'Bien1985', '76epvrm5014a717a1tll7a9yjeyej5xk\r\n', '05531833848', 'datphan24@example.com', 1, 2, '2023-02-18 01:01:47'),
 (NULL, 'Huy2007', 'u7ig5j4ed7gz4ws2tj3fb70g71z539a8\r\n', '08807838593', 'nguyen_ong@example.com', 0, 3, '2023-02-24 09:01:43');
 
+
 -- Test account password 12345678 --
 INSERT INTO users(id, username, pass, phone, email, account_status, role_id, created_date) VALUES
 (NULL, 'Admin1', '$2a$12$QsZe5FreBolhVDlu5H4F/ejE.FfMyIlE8kr4r3ry7JFWCxcm2JQ4e', NULL, 'admin1@example.com', 1, 1, now()),
