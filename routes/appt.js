@@ -48,7 +48,7 @@ function createMeeting(email) {
     });
 };
 
-route.post('/create', function(req, res) {
+router.post('/create', function(req, res) {
   var appt_query = 'call sp_doctor_appointment(?,?,?)';
   var appt_params = [req.body.pt_id, req.body.sched_id, req.body.hour_id];
   connection.query(appt_query, appt_params, function(err, result) {
