@@ -26,6 +26,15 @@ router.get("/:userid", function (req, res) {
 
 router.post("/register", function (req, res) {
   var query = "call sp_register(?, ?, ?, ?)";
+
+  bcrypt.genSalt(10,function(err, salt) {
+    if (err) throw err;
+    bcrypt.hash(req.body.password, salt, function(err, hash) {
+      if (err) throw err;
+      req.body.password = hash;
+    });
+  });
+  
   var params = [
     req.body.username,
     req.body.password,

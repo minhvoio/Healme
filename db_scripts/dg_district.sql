@@ -24,3 +24,8 @@ INSERT INTO district(id, title, province_id, created_date) VALUES
 (20, 'Quận 4', 30, '2023-03-15 11:04:27'),
 (21, 'Thành phố Thủ Đức', 30, '2023-03-15 20:08:45'),
 (22, 'Quận Tân Bình', 30, '2023-03-15 08:11:01');
+
+set sql_safe_updates = 0;
+update district
+set search_text = lower(title);
+set sql_safe_updates = 1;

@@ -11,6 +11,8 @@ var usersRouter = require("./routes/users");
 var clinicRouter = require("./routes/clinic");
 var pharmacyRouter = require("./routes/pharmacy");
 var branchRouter = require("./routes/branch");
+var areaRouter = require("./routes/area")
+var apptRouter = require("./routes/appt")
 const { config } = require("process");
 
 var app = express();
@@ -39,6 +41,8 @@ app.use("/users", usersRouter);
 app.use("/clinic", clinicRouter);
 app.use("/pharmacy", pharmacyRouter);
 app.use("/branch", branchRouter);
+app.use("/area", areaRouter);
+app.use("/appt", apptRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
