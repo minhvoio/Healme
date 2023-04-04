@@ -11,17 +11,17 @@ var usersRouter = require("./routes/users");
 var clinicRouter = require("./routes/clinic");
 var pharmacyRouter = require("./routes/pharmacy");
 var branchRouter = require("./routes/branch");
-var areaRouter = require("./routes/area")
-var apptRouter = require("./routes/appt")
+var areaRouter = require("./routes/area");
+var apptRouter = require("./routes/appt");
 const { config } = require("process");
 
 var app = express();
 
-const port = process.env.PORT || 8080;
+// const port = process.env.PORT || 8080;
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Example app listening at http://localhost:${port}`);
+// });
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
