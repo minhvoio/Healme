@@ -8,11 +8,13 @@ var logger = require("morgan");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
+var patientRouter = require("./routes/patient");
 var clinicRouter = require("./routes/clinic");
 var pharmacyRouter = require("./routes/pharmacy");
 var branchRouter = require("./routes/branch");
-var areaRouter = require("./routes/area")
-var apptRouter = require("./routes/appt")
+var areaRouter = require("./routes/area");
+var apptRouter = require("./routes/appt");
+var scheduleRouter = require("./routes/schedule");
 const { config } = require("process");
 
 var app = express();
@@ -38,11 +40,13 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+app.use("/patient", patientRouter);
 app.use("/clinic", clinicRouter);
 app.use("/pharmacy", pharmacyRouter);
 app.use("/branch", branchRouter);
 app.use("/area", areaRouter);
 app.use("/appt", apptRouter);
+app.use("/schedule", scheduleRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
