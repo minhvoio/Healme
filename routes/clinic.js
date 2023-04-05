@@ -1,6 +1,8 @@
-var express = require('express');
-const connection = require('../models/dbconfig');
+
+var express = require("express");
 var router = express.Router();
+
+const connection = require('../models/dbconfig');
 
 /* GET clinics list. */
 router.get('/', function(req, res, next) {
