@@ -57,9 +57,9 @@ router.post("/api/update/:userid", function (req, res) {
 });
 
 router.post("/api/login", loginValidation, (req, res) => {
-  var params = [req.body.email];
-  var query = "SELECT * FROM users WHERE email = ?";
-  var params = [req.body.email, req.body.password];
+  var params = [req.body.username];
+  var query = "SELECT * FROM users WHERE username = ?";
+  var params = [req.body.username, req.body.password];
   connection.query(query, params, function (err, result) {
     if (err) {
       // throw err;
@@ -69,7 +69,7 @@ router.post("/api/login", loginValidation, (req, res) => {
     }
     if (!result.length) {
       return res.status(401).send({
-        msg: "Email or password is incorrect!",
+        msg: "Username or password is incorrect!",
       });
     }
     // check password
@@ -77,7 +77,7 @@ router.post("/api/login", loginValidation, (req, res) => {
       if (bErr) {
         // throw bErr;
         return res.status(401).send({
-          msg: "Email or password is incorrect!",
+          msg: "Username or password is incorrect!",
         });
       }
       connection.query(
@@ -93,7 +93,7 @@ router.post("/api/login", loginValidation, (req, res) => {
             { expiresIn: "1h" }
           );
           connection.query(
-            `UPDATE users SET created_date = now() WHERE id = '${result[0].id}'`,
+            `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`,
             (updateErr, updateRes) => {
               if (updateErr) throw updateErr;
               return res.status(200).send({
