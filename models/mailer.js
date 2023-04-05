@@ -3,8 +3,8 @@ var nodemailer =  require('nodemailer');
 var importer = nodemailer.createTransport({ // config mail server
     service: 'Gmail',
     auth: {
-        user: 'healme.vn@gmail.com',
-        pass: 'ung-HTN0teq*auz.nkt'
+        user: 'healme.vn',
+        pass: 'dyqmfrwlwmfavqwz'
     }
 });
 

@@ -16,7 +16,7 @@ router.get("/", function (req, res) {
   });
 });
 
-router.get("/:userid", function (req, res) {
+router.get("/api/view/:userid", function (req, res) {
   var query = "call sp_view_profile(?)";
   connection.query(query, req.params.userid, function (err, result) {
     if (err) throw err;
@@ -24,30 +24,25 @@ router.get("/:userid", function (req, res) {
   });
 });
 
-router.post("/register", function (req, res) {
-  var query = "call sp_register(?, ?, ?, ?)";
-
-  bcrypt.genSalt(10,function(err, salt) {
-    if (err) throw err;
-    bcrypt.hash(req.body.password, salt, function(err, hash) {
+router.post("/api/register", function (req, res) {
+  var password = req.body.password;
+  bcrypt.hash(password, 10, function(err, hash) {
+    if (err) throw (err);
+    var query = "call sp_register(?, ?, ?, ?)";
+    var params = [
+      req.body.username,
+      hash,
+      req.body.email,
+      req.body.phone
+    ];
+    connection.query(query, params, function (err, result) {
       if (err) throw err;
-      req.body.password = hash;
+      res.send(result);
     });
-  });
-  
-  var params = [
-    req.body.username,
-    req.body.password,
-    req.body.email,
-    req.body.phone,
-  ];
-  connection.query(query, params, function (err, result) {
-    if (err) throw err;
-    res.send(result);
   });
 });
 
-router.post("/:userid/update", function (req, res) {
+router.post("/api/update/:userid", function (req, res) {
   var query = "call sp_update_profile(?, ?, ?, ?)";
   var params = [
     req.params.userid,
@@ -62,9 +57,9 @@ router.post("/:userid/update", function (req, res) {
 });
 
 router.post("/api/login", loginValidation, (req, res) => {
-  var params = [req.body.email];
-  var query = "SELECT * FROM users WHERE email = ?";
-  var params = [req.body.email, req.body.password];
+  var params = [req.body.username];
+  var query = "SELECT * FROM users WHERE username = ?";
+  var params = [req.body.username, req.body.password];
   connection.query(query, params, function (err, result) {
     if (err) {
       // throw err;
@@ -74,7 +69,7 @@ router.post("/api/login", loginValidation, (req, res) => {
     }
     if (!result.length) {
       return res.status(401).send({
-        msg: "Email or password is incorrect!",
+        msg: "Username or password is incorrect!",
       });
     }
     // check password
@@ -82,7 +77,7 @@ router.post("/api/login", loginValidation, (req, res) => {
       if (bErr) {
         // throw bErr;
         return res.status(401).send({
-          msg: "Email or password is incorrect!",
+          msg: "Username or password is incorrect!",
         });
       }
       connection.query(
@@ -98,7 +93,7 @@ router.post("/api/login", loginValidation, (req, res) => {
             { expiresIn: "1h" }
           );
           connection.query(
-            `UPDATE users SET created_date = now() WHERE id = '${result[0].id}'`,
+            `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`,
             (updateErr, updateRes) => {
               if (updateErr) throw updateErr;
               return res.status(200).send({
@@ -149,6 +144,15 @@ router.post("/api/get-user", (req, res, next) => {
       );
     }
   );
+});
+
+router.post("/api/delete/:userid", function(req, res) {
+  var query = 'call sp_deactivate_user(?)';
+  var params = req.params.userid;
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
 });
 
 module.exports = router;
