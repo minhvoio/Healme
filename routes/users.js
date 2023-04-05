@@ -16,7 +16,7 @@ router.get("/", function (req, res) {
   });
 });
 
-router.get("/:userid", function (req, res) {
+router.get("/api/view/:userid", function (req, res) {
   var query = "call sp_view_profile(?)";
   connection.query(query, req.params.userid, function (err, result) {
     if (err) throw err;
@@ -24,30 +24,25 @@ router.get("/:userid", function (req, res) {
   });
 });
 
-router.post("/register", function (req, res) {
-  var query = "call sp_register(?, ?, ?, ?)";
-
-  bcrypt.genSalt(10,function(err, salt) {
-    if (err) throw err;
-    bcrypt.hash(req.body.password, salt, function(err, hash) {
+router.post("/api/register", function (req, res) {
+  var password = req.body.password;
+  bcrypt.hash(password, 10, function(err, hash) {
+    if (err) throw (err);
+    var query = "call sp_register(?, ?, ?, ?)";
+    var params = [
+      req.body.username,
+      hash,
+      req.body.email,
+      req.body.phone
+    ];
+    connection.query(query, params, function (err, result) {
       if (err) throw err;
-      req.body.password = hash;
+      res.send(result);
     });
-  });
-  
-  var params = [
-    req.body.username,
-    req.body.password,
-    req.body.email,
-    req.body.phone,
-  ];
-  connection.query(query, params, function (err, result) {
-    if (err) throw err;
-    res.send(result);
   });
 });
 
-router.post("/:userid/update", function (req, res) {
+router.post("/api/update/:userid", function (req, res) {
   var query = "call sp_update_profile(?, ?, ?, ?)";
   var params = [
     req.params.userid,
@@ -149,6 +144,15 @@ router.post("/api/get-user", (req, res, next) => {
       );
     }
   );
+});
+
+router.post("/api/delete/:userid", function(req, res) {
+  var query = 'call sp_deactivate_user(?)';
+  var params = req.params.userid;
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
 });
 
 module.exports = router;

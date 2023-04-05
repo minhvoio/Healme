@@ -15,6 +15,7 @@ var connection = mysql.createConnection({
   database: "healthcare",
   port: 3306,
   ssl: { ca: fs.readFileSync("SSL/DigiCertGlobalRootCA.crt.pem") },
+  multipleStatements: true
 });
 
 module.exports = connection;
