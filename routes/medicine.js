@@ -8,9 +8,11 @@ router.get("/", (req, res) => {
   res.send("Medicine page");
 });
 
-router.get("/search/:search_text", (req, res) => {
-  var query = "SELECT * FROM healthcare.medicine WHERE search_text = ?";
-  connection.query(query, req.params.search_text, (err, result) => {
+router.get("/search", (req, res) => {
+  var query = "SELECT * FROM healthcare.medicine WHERE search_text LIKE ?";
+  console.log(req.body.search_text);
+  // res.send(req.body.search_text);
+  connection.query(query, req.body.search_text, (err, result) => {
     if (err) throw err;
     res.send(result);
   });
