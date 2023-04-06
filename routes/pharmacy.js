@@ -2,7 +2,6 @@ var express = require('express');
 const connection = require('../models/dbconfig');
 var router = express.Router();
 
-var connection = require('../models/dbconfig');
 /* GET pharmacy list. */
 router.get('/', function(req, res, next) {
   var query = "select * from business where type_id = 2";
