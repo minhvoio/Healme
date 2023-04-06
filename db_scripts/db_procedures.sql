@@ -22,6 +22,37 @@ begin
     commit;
 end //
 
+drop procedure if exists `sp_all_users` //
+create procedure `sp_all_users`()
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		select usr.*, r.title `role` from users usr
+			join roles r on usr.role_id = r.id;
+    commit;
+end //
+
+drop procedure if exists `sp_view_profile` //
+create procedure `sp_view_profile`(p_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		select usr.*, r.title `role` from users usr
+			join roles r on usr.role_id = r.id
+		where usr.id = p_id;
+    commit;
+end //
+
 drop procedure if exists `sp_register` //
 create procedure `sp_register`(
 	in p_username varchar(255), in p_pass varchar(255), in p_email varchar(255), in p_phone varchar(255))
