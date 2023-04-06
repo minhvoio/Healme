@@ -30,7 +30,7 @@ router.post('/api/create', function(req, res) {
 
 });
 
-router.get('/:id/presciption', function(req, res) {
+router.get('/:id/prescription', function(req, res) {
   var query = "call sp_view_prescription(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
