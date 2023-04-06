@@ -9,7 +9,7 @@ var connection = require("../models/dbconfig");
 
 /* GET users listing. */
 router.get("/", function (req, res) {
-  var query = "select * from users";
+  var query = "call sp_all_users()";
   connection.query(query, function (err, result) {
     if (err) throw err;
     res.send(result);
