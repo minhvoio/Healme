@@ -544,4 +544,114 @@ begin
 		where sched.id = p_sched_id;
 	commit;
 end //
+
+drop procedure if exists sp_prescription_details //
+create procedure sp_prescription_details(p_pres_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select pd.id, pd.pres_id, med.title, med.ingredients, med.med_type, med.supplier 
+        from prescription_details pd
+			left join medicine med on pd.med_id = med.id
+        where id = p_pres_id and pd.status = 1;
+	commit;
+end //
+
+drop procedure if exists sp_view_prescription //
+create procedure sp_view_prescription(pt_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select pres.id, biz.business_name, pres.created_date
+        from prescription pres
+			join (
+            select max(id) from prescription group by pt_id
+            ) temp on pres.id = temp.id
+            left join business biz on pd.doc_id = biz.id
+        where id = pres_id;
+	commit;
+end //
+
+drop procedure if exists sp_prescribe //
+create procedure sp_prescribe(p_pt_id bigint unsigned, p_doc_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		insert into prescription values(null, p_doc_id, p_pt_id, now());
+        select "Success" as message, last_insert_id(); 
+	commit;
+end //
+
+drop procedure if exists sp_add_prescription_details //
+create procedure sp_add_prescription_details(p_pres_id bigint unsigned, p_med_id bigint unsigned, p_note text)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		insert into prescription_details values(null, p_pres_id, p_med_id, p_note, now(), 1);
+        select "Success" as message, last_insert_id(); 
+	commit;
+end //
+
+drop procedure if exists sp_delete_prescription_details //
+create procedure sp_delete_prescription_details(p_pd_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		update prescription_details 
+        set status = 0 where id = p_pd_id;
+        select "Success" as message; 
+	commit;
+end //
+
+drop procedure if exists sp_update_prescription_details //
+create procedure sp_update_prescription_details(p_pd_id bigint unsigned, p_med_id bigint unsigned, p_note text)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		if p_med_id is not null then
+			update prescription_details 
+			set med_id = p_med_id where id = p_pd_id;
+		end if;
+        
+		if p_note is not null then
+			update prescription_details 
+			set note = p_note where id = p_pd_id;
+		end if;
+        
+        if p_med_id is null and p_note is null then
+			select "No information was updated" as message;
+		else select "Success" as message;
+        end if;
+	commit;
+end //
 delimiter ;

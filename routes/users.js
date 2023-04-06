@@ -80,6 +80,13 @@ router.post("/api/login", loginValidation, (req, res) => {
           msg: "Username or password is incorrect!",
         });
       }
+      if (!bResult) {
+          // throw bErr;
+          return res.status(401).send({
+            msg: "Username or password is incorrect!",
+          });
+      }
+      
       connection.query(
         "SELECT * FROM roles WHERE id = ?",
         result[0].role_id,
