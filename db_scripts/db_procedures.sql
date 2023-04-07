@@ -75,7 +75,7 @@ begin
         set message_text = 'Phone number already in use'; 
 	else
 		begin
-			insert into users values(null, p_username, md5(p_pass), p_phone, p_email, 1, 1, now());
+			insert into users values(null, p_username, md5(p_pass), p_phone, p_email, 1, 1, now(), null);
             select 'Registered successfully!' message;
 		end;
 	end if;
@@ -176,12 +176,16 @@ begin
         rollback;
 	end;
     start transaction;
-    select title, district_id into v_ward, v_district_id from ward where id = p_ward_id;
-    select title, province_id into v_district, v_province_id from district where id = v_district_id;
-    select title into v_province from province where id = v_province_id;
-    insert into address values(null, concat_ws(', ', p_address, v_ward, v_district, v_province), p_ward, now());
-    insert into patient values(null, p_user_id, p_fullname, p_dob, p_gender, last_insert_id(), now());
-    select 'Profile created successfully' message;
+		if (select 1 = 1 from patient where user_id = p_user_id) then
+			signal sqlstate '45012'
+			set message_text = 'User already had profile'; 
+		end if;
+		select title, district_id into v_ward, v_district_id from ward where id = p_ward_id;
+		select title, province_id into v_district, v_province_id from district where id = v_district_id;
+		select name into v_province from province where id = v_province_id;
+		insert into address values(null, concat_ws(', ', p_address, v_ward, v_district, v_province), p_ward_id, now());
+		insert into patient values(null, p_user_id, p_fullname, p_dob, p_gender, last_insert_id(), now());
+		select 'Profile created successfully' message;
     commit;
 end //
 
@@ -195,9 +199,17 @@ begin
 			rollback;
 		end;
 	start transaction;
+		select account_status into v_status from users where id = p_user_id;
+        if v_status = 1 then 
+			set v_status = 0;
+            set v_message = 'Account Deactivated';
+        else 
+			set v_status = 1;
+            set v_message = 'Account Reactivated';
+        end if;
 		update users
-		set account_status = 0 where id = p_user_id;
-		select 'Account Deactivated' message;
+		set account_status = v_status where id = p_user_id;
+		select v_message message;
 	commit;
 end//
 
@@ -515,13 +527,30 @@ begin
 			rollback;
 		end;
 	start transaction;
-		if (select 1 = 1 from doctor_appoinment where sched_id = p_sched_id and hour_id = p_hour_id) then
+		if (select 1 = 1 from doctor_appointment where sched_id = p_sched_id and hour_id = p_hour_id and status = 1) then
 			signal sqlstate '45010'
 			set message_text = 'Schedule is not free';
 		else
-			insert into doctor_appointment values(null, p_patient_id, p_sched_id, p_hour_id, now());
+			insert into doctor_appointment values(null, p_patient_id, p_sched_id, p_hour_id, now(), 1);
 			select last_insert_id() id, 'Appointment made' message;
 		end if;
+	commit;
+end //
+
+drop procedure if exists sp_cancel_appointment //
+create procedure sp_cancel_appointment(p_appt_id bigint unsigned)
+begin
+	declare v_pres_id bigint unsigned;
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		update doctor_appointment
+        set status = 0 where id = p_appt_id;
+        select pt_id, sched_id from doctor_appointment where id = p_appt_id;
 	commit;
 end //
 
@@ -567,7 +596,7 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select biz.business_name, usr.email, sched.workday, hr.details appt_hour  from work_schedule sched 
+		select biz.business_name, usr.email, sched.workday, hr.details appt_hour from work_schedule sched 
 			left join business biz on sched.doc_id = biz.id
             left join doctor_appointment appt on appt.sched_id = sched.id
             left join appt_hour hr on hr.id = appt.hour_id
@@ -586,10 +615,10 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select pd.id, pd.pres_id, med.title, med.ingredients, med.med_type, med.supplier 
+		select pd.id, pd.pres_id, med.title, med.ingredients, med.med_type, med.supplier, pd.note
         from prescription_details pd
 			left join medicine med on pd.med_id = med.id
-        where id = p_pres_id and pd.status = 1;
+        where pd.pres_id = p_pres_id and pd.status = 1;
 	commit;
 end //
 
@@ -605,11 +634,8 @@ begin
 	start transaction;
 		select pres.id, biz.business_name, pres.created_date
         from prescription pres
-			join (
-            select max(id) from prescription group by pt_id
-            ) temp on pres.id = temp.id
             left join business biz on pd.doc_id = biz.id
-        where id = pres_id;
+        where pres.id = pres_id;
 	commit;
 end //
 
@@ -623,7 +649,7 @@ begin
 			rollback;
 		end;
 	start transaction;
-		insert into prescription values(null, p_doc_id, p_pt_id, now());
+		insert into prescription values(null, p_doc_id, p_pt_id, now(), 1);
         select "Success" as message, last_insert_id(); 
 	commit;
 end //
@@ -638,6 +664,12 @@ begin
 			rollback;
 		end;
 	start transaction;
+		if (select 1 = 1 from prescription_details 
+        where pres_id = p_pres_id and med_id = p_med_id and status = 1)
+        then 
+			signal sqlstate '45011'
+			set message_text = 'Medicine already prescribed'; 
+		end if;
 		insert into prescription_details values(null, p_pres_id, p_med_id, p_note, now(), 1);
         select "Success" as message, last_insert_id(); 
 	commit;
@@ -662,6 +694,7 @@ end //
 drop procedure if exists sp_update_prescription_details //
 create procedure sp_update_prescription_details(p_pd_id bigint unsigned, p_med_id bigint unsigned, p_note text)
 begin
+	declare v_pres_id bigint unsigned;
 	declare exit handler for sqlexception
 		begin
 			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
@@ -670,8 +703,16 @@ begin
 		end;
 	start transaction;
 		if p_med_id is not null then
-			update prescription_details 
-			set med_id = p_med_id where id = p_pd_id;
+			select pres_id into v_pres_id from prescription_details where id = p_pd_id;
+			if (select 1 = 1 from prescription_details 
+				where pres_id = v_pres_id and med_id = p_med_id 
+					and id != p_pd_id and status = 1)
+			then signal sqlstate '45011'
+				set message_text = 'Medicine already prescribed'; 
+            else
+				update prescription_details 
+				set med_id = p_med_id where id = p_pd_id;
+			end if;
 		end if;
         
 		if p_note is not null then
@@ -685,4 +726,94 @@ begin
         end if;
 	commit;
 end //
+
+delimiter //
+drop procedure if exists sp_create_user//
+create procedure sp_create_user(p_username varchar(255), p_pass text, p_name varchar(255),
+	p_role_id tinyint unsigned, p_email varchar(255), p_phone varchar(255))
+begin
+	declare v_biz_type bigint unsigned;
+    declare v_user_id bigint unsigned;
+    
+    declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+	if (select 1 = 1 from users where p_username = username) then
+		signal sqlstate '45001'
+        set message_text = 'Username already in use'; 
+	elseif (select 1 = 1 from users where p_email is not null and p_email = email) then
+		signal sqlstate '45002'
+        set message_text = 'Email already in use'; 
+	elseif (select 1 = 1 from users where p_phone is not null and p_phone = phone) then
+		signal sqlstate '45003'
+        set message_text = 'Phone number already in use'; 
+	else
+		begin
+			insert into users values(null, p_username, p_pass, p_phone, p_email, 1, p_role_id, now(), null);
+            set v_user_id = last_insert_id();
+            
+            if (p_role_id > 2) then
+				if (p_role_id = 3) then 
+					set v_biz_type = 1;
+				elseif (p_role_id = 4) then 
+					set v_biz_type = 2;
+				end if;
+				insert into business values(null, p_name, v_user_id, v_biz_type, now());
+			else insert into patient(user_id, fullname, create_date) values(p_user_id, p_name, now());
+			end if;
+            
+            select 'User created!' message, v_user_id user_id;
+		end;
+	end if;
+    commit;
+end //
+
+drop procedure if exists sp_add_address //
+create procedure sp_add_address(p_user_id bigint unsigned, p_address text, p_ward_id bigint unsigned)
+begin
+	declare v_role_id tinyint unsigned;
+    declare v_user_role_id bigint unsigned;
+	
+	declare v_ward varchar(255);
+	declare v_district varchar(255);
+    declare v_province varchar(255);
+    declare v_district_id bigint unsigned;
+    declare v_province_id bigint unsigned;
+    declare v_address_id bigint unsigned;
+    
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		select title, district_id into v_ward, v_district_id from ward where id = p_ward_id;
+		select title, province_id into v_district, v_province_id from district where id = v_district_id;
+		select name into v_province from province where id = v_province_id;
+		insert into address values(null, concat_ws(', ', p_address, v_ward, v_district, v_province), p_ward_id, now());
+        set v_address_id = last_insert_id();
+        
+        select role_id into v_role_id from users where id = p_user_id;
+        if (v_role_id = 2) then
+			select pt.id into v_user_role_id from patient pt join users usr on pt.user_id = usr.id
+            where usr.id = p_user_id;
+			update patient set address_id = v_address_id where id = v_user_role_id;
+		elseif (v_role_id = 3) then
+			select doc.id into v_user_role_id from business doc join users usr on doc.rep_user_id = usr.id
+            where usr.id = p_user_id;
+            update doctor_address set address_id = v_address_id where id = v_user_role_id;
+		elseif (v_role_id = 4) then
+			select br.id into v_user_role_id from pharmacy_branch br join users usr on br.user_id = usr.id
+            where usr.id = p_user_id;
+            update pharmacy_branch set address_id = v_address_id where id = v_user_role_id;
+		end if;
+		select 'Address added' message, v_user_role_id id, v_address_id address_id;
+    commit;
+end //
+
 delimiter ;
