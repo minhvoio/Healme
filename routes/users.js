@@ -16,6 +16,27 @@ router.get("/", function (req, res) {
   });
 });
 
+router.post("/api/create", function(req, res) {
+  var password = req.body.password;
+  bcrypt.hash(password, 10, function(err, hash) {
+    if (err) throw err;
+
+    var query = "call sp_create_user(?, ?, ?, ?, ?, ?)";
+    var params = [
+      req.body.username, 
+      hash,
+      req.body.name,
+      req.body.role_id,
+      req.body.email,
+      req.body.phone
+    ];
+    connection.query(query, params, function(err, result) {
+      if (err) throw err;
+      res.send(result);
+    });
+  });
+});
+
 router.get("/api/view/:userid", function (req, res) {
   var query = "call sp_view_profile(?)";
   connection.query(query, req.params.userid, function (err, result) {
@@ -39,6 +60,15 @@ router.post("/api/register", function (req, res) {
       if (err) throw err;
       res.send(result);
     });
+  });
+});
+
+router.post("/:user_id/api/add-address", function(req, res) {
+  var query = "call sp_add_address(?, ?, ?);";
+  var params = [req.params.user_id, req.body.address, req.body.ward];
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
   });
 });
 

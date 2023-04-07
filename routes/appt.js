@@ -105,4 +105,50 @@ router.post('/api/create', function(req, res) {
   });
 });
 
+router.post("/api/delete/:appt_id", function(req, res) {
+  var query = 'call sp_cancel_appointment(?)';
+  var params = req.params.appt_id;
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+
+    var pt_id = result[0][0].pt_id;
+    var sched_id = result[0][0].sched_id;
+    var pt_query = "call sp_patient_email(?)";
+    connection.query(pt_query, pt_id, function(err, pt_result) {
+      if (err) throw err;
+      
+      var pt_email = pt_result[0][0].user_email;
+      var appt_query = "call sp_appt_info(?)";
+      connection.query(appt_query, sched_id, function(err, appt_result) {
+        if (err) throw err;
+
+        var biz_name = appt_result[0][0].business_name;
+        var biz_email = appt_result[0][0].email;
+        var appt_day = appt_result[0][0].workday;
+        var appt_hour = appt_result[0][0].appt_hour;
+
+        var mailOptions = { 
+          from: 'noreply@domain.com',
+          to: [pt_email, biz_email].join(', '), 
+          subject: 'Thông báo hủy lịch khám',
+          text: 'Cancellation Notice',
+          html: '<p>Thông báo hủy lịch khám</b>' 
+            + '<ul><li>Phòng khám: ' + biz_name + '</li><li>Email: ' + biz_email 
+            + '</li><li>Thời gian: ' + appt_hour + ' Ngày: ' + appt_day + '</li></ul>'
+        }
+        transporter.sendMail(mailOptions, function(err, result){
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Message sent: ' +  result.response);
+            }
+        });
+      });
+    });
+
+    res.send("Success");
+  });
+});
+
+
 module.exports = router;
