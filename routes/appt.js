@@ -27,6 +27,7 @@ router.post('/api/create', function(req, res) {
       return;
     }
     console.log(result);
+    res.send(result)
     
     if (result[0][0].error_message != null) 
     {
@@ -100,7 +101,6 @@ router.post('/api/create', function(req, res) {
         .catch(function (err) {
           console.log("API call failed, reason ", err);
         });
-      res.send()
     });
   });
 });

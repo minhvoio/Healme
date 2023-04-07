@@ -189,9 +189,12 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_deactivate_user` //
 create procedure `sp_deactivate_user`(in p_user_id bigint unsigned)
 begin
+	declare v_status tinyint unsigned;
+    declare v_message varchar(64);
 	declare exit handler for sqlexception
 		begin
 			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
@@ -763,7 +766,7 @@ begin
 					set v_biz_type = 2;
 				end if;
 				insert into business values(null, p_name, v_user_id, v_biz_type, now());
-			else insert into patient(user_id, fullname, create_date) values(p_user_id, p_name, now());
+			else insert into patient(user_id, fullname, created_date) values(v_user_id, p_name, now());
 			end if;
             
             select 'User created!' message, v_user_id user_id;
