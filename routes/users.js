@@ -88,7 +88,7 @@ router.post("/api/update/:userid", function (req, res) {
 
 router.post("/api/login", loginValidation, (req, res) => {
   var params = [req.body.username];
-  var query = "SELECT * FROM users WHERE username = ?";
+  var query = "SELECT * FROM users WHERE username = ? AND account_status = 1;";
   var params = [req.body.username, req.body.password];
   connection.query(query, params, function (err, result) {
     if (err) {
