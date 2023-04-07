@@ -16,22 +16,14 @@ var areaRouter = require("./routes/area");
 var apptRouter = require("./routes/appt");
 
 var medicineRouter = require("./routes/medicine");
-
 var scheduleRouter = require("./routes/schedule");
-
 var searchRouter = require("./routes/search");
-
 var prescriptionRouter = require("./routes/prescription");
+var mapRouter = require("./routes/map");
 
 const { config } = require("process");
 
 var app = express();
-
-// const port = process.env.PORT || 8080;
-
-// app.listen(port, () => {
-//   console.log(`Example app listening at http://localhost:${port}`);
-// });
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -56,10 +48,9 @@ app.use("/area", areaRouter);
 app.use("/appt", apptRouter);
 app.use("/medicine", medicineRouter);
 app.use("/schedule", scheduleRouter);
-
 app.use("/prescription", prescriptionRouter);
-
 app.use("/search", searchRouter);
+app.use("/map", mapRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

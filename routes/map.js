@@ -1,40 +1,77 @@
-var { query } = require("express");
-var express = require("express");
-var router = express.Router();
-var connection = require("../models/dbconfig");
-
+const express = require("express");
+const router = express.Router();
 const fetch = require("isomorphic-fetch");
-// const apiKey = require('./config')
-const apiKey = "AIzaSyBDJEju6o6dXOPZRE3-gaF4VJbrWywkyk8";
+const { resume } = require("../models/dbconfig");
 
-async function getDrivingDistance(origin, destination, apiKey) {
-  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${destination}&mode=driving&key=${apiKey}`;
+const apiKey = "e4nfa7XKkjnievOvAzkTLp4ve4fABWfds4aLFgZa";
+const destination =
+  "91 Ngõ 43 Trung Kính|337 Đ. Nguyễn Trãi, Phường Nguyễn Cư Trinh, Quận 1, Thành phố Hồ Chí Minh, Việt Nam|40BD Trung Hòa, Cầu Giấy, Hà Nội";
+const origin = "91 Ngõ 43 Trung Kính";
+// const destination =
+//   "21.031011,105.783206|21.022328,105.790480|21.016665,105.788774";
+
+async function getCoordinate(target, apiKey) {
+  const url = `https://rsapi.goong.io/Geocode?address=${target}&api_key=${apiKey}`;
   const response = await fetch(url);
   const data = await response.json();
   if (data.status === "OK") {
-    const distance = data.rows[0].elements[0].distance.value;
-    return distance;
-  } else {
-    throw new Error("Unable to retrieve driving distance.");
-  }
+    // const coordinate =
+    // data.results[0].geometry.location.lat +
+    // "," +
+    // data.results[0].geometry.location.lng;
+    const coordinate = [];
+    for (let i = 0; i < data.results.length; ++i) {
+      coordinate.push(
+        data.results[i].geometry.location.lat +
+          "," +
+          data.results[i].geometry.location.lng
+      );
+    }
+    // const coordinate = data;
+    return arrayToReadableAPI(coordinate);
+  } else console.log(data.status);
+  return data;
 }
 
-const origin =
-  "Ký túc xá Khu B Đại học Quốc gia TP.HCM, Tô Vĩnh Diện, Đông Hoà, Dĩ An, Bình Dương, Việt Nam";
-const destination =
-  "337 Đ. Nguyễn Trãi, Phường Nguyễn Cư Trinh, Quận 1, Thành phố Hồ Chí Minh, Việt Nam";
+async function getDrivingDistance(origin, destination, apiKey) {
+  const url = `https://rsapi.goong.io/DistanceMatrix?origins=${origin}&destinations=${destination}&vehicle=car&api_key=${apiKey}`;
+  const response = await fetch(url);
+  const data = await response.json();
 
-router.get("/", (req, res) => {
-  var result;
-  getDrivingDistance(origin, destination, apiKey)
-    .then((distance) => {
-      result = `The driving distance between ${origin} and ${destination} is ${distance} meters.`;
-      console.log(result);
+  if (data.rows[0] != null) {
+    return data.rows[0].elements;
+  } else console.log(`Can't find the place`);
+}
+
+function arrayToReadableAPI(array) {
+  let string = "";
+  for (let i = 0; i < array.length; ++i) {
+    if (i == array.length - 1) string += array[i];
+    else string += array[i] + "|";
+  }
+  return string;
+}
+
+router.get("/", async (req, res) => {
+  try {
+    const ori = await getCoordinate(origin, apiKey);
+    const dest = await getCoordinate(destination, apiKey);
+
+    const result = await getDrivingDistance(ori, dest, apiKey);
+    res.send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+router.get("/coordinate", (req, res) => {
+  getCoordinate(target, apiKey)
+    .then((origin) => {
+      console.log(origin);
+      res.send(origin);
     })
-    .catch((error) => {
-      console.error(error);
-    });
-  res.send(result);
+    .catch((err) => console.log(err));
 });
 
 module.exports = router;
