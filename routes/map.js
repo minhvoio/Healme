@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const fetch = require("isomorphic-fetch");
 const { resume } = require("../models/dbconfig");
+require("dotenv").config({ path: "local.env" });
 
-const apiKey = "e4nfa7XKkjnievOvAzkTLp4ve4fABWfds4aLFgZa";
+const apiKey = process.env.MAP_API_KEY;
 const destination =
   "Trường Đại học Bách khoa - Đại học Quốc gia TP.HCM, Lý Thường Kiệt, phường 14, Quận 10, Thành phố Hồ Chí Minh|337 Đ. Nguyễn Trãi, Phường Nguyễn Cư Trinh, Quận 1, Thành phố Hồ Chí Minh, Việt Nam|40BD Trung Hòa, Cầu Giấy, Hà Nội|55A, Trần Ngọc Diện, Phường Thảo Điền, Thành phố Thủ Đức, Thành phố Hồ Chí Minh";
 const target = [
