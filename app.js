@@ -20,6 +20,7 @@ var scheduleRouter = require("./routes/schedule");
 var searchRouter = require("./routes/search");
 var prescriptionRouter = require("./routes/prescription");
 var mapRouter = require("./routes/map");
+var chatbotRouter = require("./routes/chatbot");
 
 const { config } = require("process");
 
@@ -51,6 +52,7 @@ app.use("/schedule", scheduleRouter);
 app.use("/prescription", prescriptionRouter);
 app.use("/search", searchRouter);
 app.use("/map", mapRouter);
+app.use("/chatbot", chatbotRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
