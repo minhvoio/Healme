@@ -10,11 +10,11 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-async function generateResponse(question, maxWords = 3500) {
+async function generateResponse(question, maxWords = 3500, creativity = 0.7) {
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     max_tokens: maxWords,
-    temperature: 0.6,
+    temperature: creativity,
     messages: [
       {
         role: "user",
@@ -29,7 +29,8 @@ async function generateResponse(question, maxWords = 3500) {
 router.post("/", async (req, res) => {
   const question = req.body.question;
   const maxWords = req.body.maxWords;
-  const responseText = await generateResponse(question, maxWords);
+  const creativity = req.body.creativity;
+  const responseText = await generateResponse(question, maxWords, creativity);
   res.send(responseText);
 });
 
