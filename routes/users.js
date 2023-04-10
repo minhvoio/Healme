@@ -178,7 +178,6 @@ router.post("/api/get-user", (req, res, next) => {
   );
 });
 
-
 router.post("/:user_id/api/change-password", function(req, res) {
   old_pass = req.body.old_pass;
   new_pass = req.body.new_pass;
