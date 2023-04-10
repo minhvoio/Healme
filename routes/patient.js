@@ -1,5 +1,6 @@
 var express = require('express');
 const connection = require('../models/dbconfig');
+const verifyToken = require('../middlewares/verifyToken');
 var router = express.Router();
 
 /* GET users listing. */
@@ -8,7 +9,7 @@ router.get("/", function (req, res, next) {
 });
 
 
-router.get("/:patientid", function (req, res) {
+router.get("/:patientid", verifyToken, function (req, res) {
   var query = "call sp_patient_profile(?)";
   connection.query(query, req.params.patientid, function (err, result) {
     if (err) throw err;
@@ -30,7 +31,7 @@ router.post('/api/create', function(req, res) {
 
 });
 
-router.get('/:id/prescription', function(req, res) {
+router.get('/:id/prescription', verifyToken, function(req, res) {
   var query = "call sp_view_prescription(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
@@ -39,7 +40,7 @@ router.get('/:id/prescription', function(req, res) {
   });
 });
 
-router.post('/:id/api/update', function(req,res) {
+router.post('/:id/api/update', verifyToken, function(req,res) {
   var query = "call sp_pt_update_profile(nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))";
   var params = [req.params.id, req.body.fullname, req.body.dob, req.body.gender];
   connection.query(query, params, function(err, result) {
