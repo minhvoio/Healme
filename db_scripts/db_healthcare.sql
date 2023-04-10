@@ -159,18 +159,19 @@ create table prescription_details
 create table patient_history
 (
 	id bigint unsigned primary key auto_increment,
-    pt_id bigint unsigned,
-    symp_id bigint unsigned,
-    pt_status tinyint unsigned,
+    appt_id bigint unsigned,
+	diagnosis text,
+    pres_id bigint unsigned,
     created_date datetime,
-    constraint fk_hist_pt foreign key(pt_id) references patient(id),
+    constraint fk_hist_appt foreign key(appt_id) references doctor_appointment(id),
+    constraint fk_hist_pres foreign key(pres_id) references prescription(id)
 );
 
 create table time_of_day
 (
     id tinyint unsigned primary key auto_increment,
     title varchar(16)
-)
+);
 
 create table work_schedule
 (
@@ -199,7 +200,7 @@ create table doctor_appointment
     created_date datetime,
     status tinyint unsigned,
     constraint fk_appt_pt foreign key(pt_id) references patient(id),
-    constraint fk_appt_sched foreign key(sched_id) references work_schedule(id)
+    constraint fk_appt_sched foreign key(sched_id) references work_schedule(id),
     constraint fk_appt_hour foreign key(hour_id) references appt_hour(id)
 );
 

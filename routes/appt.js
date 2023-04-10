@@ -150,5 +150,13 @@ router.post("/api/delete/:appt_id", function(req, res) {
   });
 });
 
+router.post("/:id/diagnose", function(req, res) {
+  var query =  "call sp_diagnose(?, ?, ?, ?)";
+  var params = [req.params.id, req.body.appt, req.body.pres, req.body.diagnosis];
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
+});
 
 module.exports = router;

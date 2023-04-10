@@ -53,34 +53,6 @@ begin
     commit;
 end //
 
-drop procedure if exists `sp_register` //
-create procedure `sp_register`(
-	in p_username varchar(255), in p_pass varchar(255), in p_email varchar(255), in p_phone varchar(255))
-begin
-	declare exit handler for sqlexception
-    begin
-        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
-        select concat_ws(': ', @p1, @p2) as error_message;
-        rollback;
-	end;
-    start transaction;
-	if (select 1 = 1 from users where p_username = username) then
-		signal sqlstate '45001'
-        set message_text = 'Username already in use'; 
-	elseif (select 1 = 1 from users where p_email is not null and p_email = email) then
-		signal sqlstate '45002'
-        set message_text = 'Email already in use'; 
-	elseif (select 1 = 1 from users where p_phone is not null and p_phone = phone) then
-		signal sqlstate '45003'
-        set message_text = 'Phone number already in use'; 
-	else
-		begin
-			insert into users values(null, p_username, md5(p_pass), p_phone, p_email, 1, 1, now(), null);
-            select 'Registered successfully!' message;
-		end;
-	end if;
-    commit;
-end //
 
 drop procedure if exists `sp_update_profile` //
 create procedure `sp_update_profile`(in p_id bigint unsigned, 
@@ -132,6 +104,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_register` //
 create procedure `sp_register`(
 	in p_username varchar(255), in p_pass varchar(255), in p_email varchar(255), in p_phone varchar(255))
@@ -154,7 +127,7 @@ begin
         set message_text = 'Phone number already in use'; 
 	else
 		begin
-			insert into users values(null, p_username, p_pass, p_phone, p_email, 1, 2, now());
+			insert into users values(null, p_username, p_pass, p_phone, p_email, 1, 2, now(), null);
             select 'Registered successfully!' message, last_insert_id() id;
 		end;
 	end if;
@@ -505,6 +478,7 @@ begin
 	commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_doctor_schedule` //
 create procedure `sp_doctor_schedule` (p_doctor_id bigint unsigned, 
 	p_day date)
@@ -517,7 +491,7 @@ begin
 		end;
 	start transaction;
 		insert into work_schedule values(null, p_doctor_id, p_day, now());
-        select last_insert_id(), "Update sucessfull" message;
+        select last_insert_id() id, "Update sucessfull" message;
 	commit;
 end //
 
@@ -645,6 +619,7 @@ begin
 	commit;
 end //
 
+delimiter //
 drop procedure if exists sp_prescribe //
 create procedure sp_prescribe(p_pt_id bigint unsigned, p_doc_id bigint unsigned)
 begin
@@ -656,10 +631,11 @@ begin
 		end;
 	start transaction;
 		insert into prescription values(null, p_doc_id, p_pt_id, now(), 1);
-        select "Success" as message, last_insert_id(); 
+        select "Success" as message, last_insert_id() id; 
 	commit;
 end //
 
+delimiter //
 drop procedure if exists sp_add_prescription_details //
 create procedure sp_add_prescription_details(p_pres_id bigint unsigned, p_med_id bigint unsigned, p_note text)
 begin
@@ -677,7 +653,7 @@ begin
 			set message_text = 'Medicine already prescribed'; 
 		end if;
 		insert into prescription_details values(null, p_pres_id, p_med_id, p_note, now(), 1);
-        select "Success" as message, last_insert_id(); 
+        select "Success" as message, last_insert_id() id; 
 	commit;
 end //
 
@@ -885,6 +861,22 @@ begin
             left join address addr on da.address_id = addr.id
             left join users usr on biz.rep_user_id = usr.id
 		where biz.id = p_biz_id;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists sp_diagnose //
+create procedure sp_diagnose(p_appt_id bigint unsigned, p_diagnosis text, p_pres_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		insert into patient_history values(null, p_appt_id, p_diagnosis, p_pres_id, now());
+        select 'Success' message, last_insert_id() id;
 	commit;
 end //
 
