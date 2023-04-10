@@ -12,6 +12,14 @@ router.get("/", function (req, res, next) {
   });
 });
 
+router.get("/:id", function(req, res) {
+  var query = "call sp_get_clinic(?)";
+  connection.query(query, req.params.id, function(err, result) {
+    if(err) throw err;
+    res.send(result);
+  });
+});
+
 router.get("/dept/:deptid", function (req, res) {
   var query = "call sp_filter_by_department(?)";
   var params = req.params.deptid;

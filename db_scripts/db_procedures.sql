@@ -115,6 +115,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_change_password` //
 create procedure `sp_change_password`(in p_id bigint unsigned, in p_pass text)
 begin
@@ -126,7 +127,7 @@ begin
 	end;
     start transaction;
     update users
-    set pass = md5(p_pass) where id = p_id;
+    set pass = p_pass where id = p_id;
     select 'Password changed successfully!' message;
     commit;
 end //
@@ -625,6 +626,7 @@ begin
 	commit;
 end //
 
+delimiter //
 drop procedure if exists sp_view_prescription //
 create procedure sp_view_prescription(pt_id bigint unsigned)
 begin
@@ -635,10 +637,11 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select pres.id, biz.business_name, pres.created_date
-        from prescription pres
-            left join business biz on pd.doc_id = biz.id
-        where pres.id = pres_id;
+		select pres.id pres_id, biz.business_name, pres.created_date
+        from patient pt
+        left join prescription pres on pres.pt_id = pt.id
+            left join business biz on pres.doc_id = biz.id
+        where pt.id = pt_id;
 	commit;
 end //
 
@@ -817,6 +820,72 @@ begin
 		end if;
 		select 'Address added' message, v_user_role_id id, v_address_id address_id;
     commit;
+end //
+
+delimiter //
+drop procedure if exists sp_patient_profile //
+create procedure sp_patient_profile(p_pt_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select fullname, date_of_birth, gender, addr.fulladdress
+        from patient pt left join address addr on pt.address_id = addr.id
+        where pt.id = p_pt_id;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists sp_pt_update_profile //
+create procedure sp_pt_update_profile(p_pt_id bigint unsigned, p_name varchar(255), p_dob datetime, p_gender varchar(8))
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		if (p_name is not null) then
+			update patient
+			set fullname = p_name where id = p_pt_id;
+		end if;
+        
+        if (p_dob is not null) then
+			update patient
+			set date_of_birth = p_dob where id = p_pt_id;
+		end if;
+        
+        if (p_gender is not null) then
+			update patient
+			set gender = p_gender where id = p_pt_id;
+		end if;
+        
+        select 'Success' message;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists sp_get_clinic //
+create procedure sp_get_clinic(p_biz_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select biz.id, biz.business_name, addr.fulladdress, usr.email, usr.phone from business biz
+			join doctor_address da on da.business_id = biz.id
+            left join address addr on da.address_id = addr.id
+            left join users usr on biz.rep_user_id = usr.id
+		where biz.id = p_biz_id;
+	commit;
 end //
 
 delimiter ;
