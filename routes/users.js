@@ -121,7 +121,7 @@ router.post("/api/login", loginValidation, (req, res) => {
           result[0].role = roleTitle;
           const token = jwt.sign(
             { id: result[0].id },
-            "the-super-strong-secrect",
+            "the-super-strong-secret",
             { expiresIn: "120d" }
           );
           connection.query(
@@ -153,7 +153,7 @@ router.post("/api/get-user", (req, res, next) => {
     });
   }
   const theToken = req.headers.authorization.split(" ")[1];
-  const decoded = jwt.verify(theToken, "the-super-strong-secrect");
+  const decoded = jwt.verify(theToken, "the-super-strong-secret");
 
   connection.query(
     "SELECT * FROM users where id = ?",
