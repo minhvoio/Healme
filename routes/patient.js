@@ -9,7 +9,7 @@ router.get("/", function (req, res, next) {
 
 
 router.get("/:patientid", function (req, res) {
-  var query = "select * from patient where id = ?";
+  var query = "call sp_patient_profile(?)";
   connection.query(query, req.params.patientid, function (err, result) {
     if (err) throw err;
     res.send(result);
@@ -38,4 +38,14 @@ router.get('/:id/prescription', function(req, res) {
     res.send(result);
   });
 });
+
+router.post('/:id/api/update', function(req,res) {
+  var query = "call sp_pt_update_profile(nullif(?, ''), nullif(?, ''), nullif(?, ''), nullif(?, ''))";
+  var params = [req.params.id, req.body.fullname, req.body.dob, req.body.gender];
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
 module.exports = router;

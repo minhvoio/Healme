@@ -178,8 +178,34 @@ router.post("/api/get-user", (req, res, next) => {
   );
 });
 
-router.post("/api/delete/:userid", function (req, res) {
-  var query = "call sp_deactivate_user(?)";
+
+router.post("/:user_id/api/change-password", function(req, res) {
+  old_pass = req.body.old_pass;
+  new_pass = req.body.new_pass;
+  var pass_query = "select pass from users where id = ?;"
+  connection.query(pass_query, req.params.user_id, function(err, result) {
+    if (err) throw err;
+    bcrypt.compare(old_pass, result[0].pass, function(bErr, bResult) {
+      if (bErr) throw bErr;
+      if (!bResult) {
+        return res.status(401).send({
+          msg: "Password is incorrect!",
+        });
+      }
+      bcrypt.hash(new_pass, 10, function(err, hash) {
+        var query = "call sp_change_password(?, ?)";
+        var params = [req.params.user_id, hash];
+        connection.query(query, params, function(err,result) {
+          if (err) throw err;
+          res.send(result);
+        });
+      });
+    });
+  });
+});
+
+router.post("/api/delete/:userid", function(req, res) {
+  var query = 'call sp_deactivate_user(?)';
   var params = req.params.userid;
   connection.query(query, params, function (err, result) {
     if (err) throw err;
