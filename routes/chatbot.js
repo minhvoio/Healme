@@ -4,7 +4,7 @@ var router = express.Router();
 require("dotenv").config({ path: "local.env" });
 
 const { Configuration, OpenAIApi } = require("openai");
-const { verifyToken } = require("../middlewares/verifyToken");
+const verifyToken = require("../middlewares/verifyToken");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -27,7 +27,7 @@ async function generateResponse(question, maxWords = 3500, creativity = 0.7) {
   return result;
 }
 
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, async (req, res) => {
   const question = req.body.question;
   const maxWords = req.body.maxWords;
   const creativity = req.body.creativity;

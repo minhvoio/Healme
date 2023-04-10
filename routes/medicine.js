@@ -3,12 +3,13 @@ var express = require("express");
 var router = express.Router();
 
 var connection = require("../models/dbconfig");
+const verifyToken = require("../middlewares/verifyToken");
 
 router.get("/", (req, res) => {
   res.send("Medicine page");
 });
 
-router.get("/search", (req, res) => {
+router.get("/search", verifyToken, (req, res) => {
   var query = "SELECT * FROM healthcare.medicine WHERE search_text LIKE ?";
   console.log(req.body.search_text);
   // res.send(req.body.search_text);
