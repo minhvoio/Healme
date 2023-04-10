@@ -6,6 +6,7 @@ const connection = require('../models/dbconfig');
 const transporter = require('../models/mailer');
 const app_email = 'lenamthaisonts@gmail.com';
 const { route } = require(".");
+const verifyToken = require("../middlewares/verifyToken");
 require("dotenv").config();
 
 const payload = {
@@ -18,7 +19,7 @@ async function createMeeting(email) {
   
 };
 
-router.post('/api/create', function(req, res) {
+router.post('/api/create', verifyToken, function(req, res) {
   var appt_query = 'call sp_doctor_appointment(?,?,?)';
   var appt_params = [req.body.pt_id, req.body.sched_id, req.body.hour_id];
   connection.query(appt_query, appt_params, function(err, result) {
@@ -105,7 +106,7 @@ router.post('/api/create', function(req, res) {
   });
 });
 
-router.post("/api/delete/:appt_id", function(req, res) {
+router.post("/api/delete/:appt_id", verifyToken, function(req, res) {
   var query = 'call sp_cancel_appointment(?)';
   var params = req.params.appt_id;
   connection.query(query, params, function(err, result) {
@@ -150,7 +151,7 @@ router.post("/api/delete/:appt_id", function(req, res) {
   });
 });
 
-router.post("/:id/diagnose", function(req, res) {
+router.post("/:id/diagnose", verifyToken, function(req, res) {
   var query =  "call sp_diagnose(?, ?, ?, ?)";
   var params = [req.params.id, req.body.appt, req.body.pres, req.body.diagnosis];
   connection.query(query, params, function(err, result) {
