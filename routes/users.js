@@ -16,21 +16,21 @@ router.get("/", function (req, res) {
   });
 });
 
-router.post("/api/create", function(req, res) {
+router.post("/api/create", function (req, res) {
   var password = req.body.password;
-  bcrypt.hash(password, 10, function(err, hash) {
+  bcrypt.hash(password, 10, function (err, hash) {
     if (err) throw err;
 
     var query = "call sp_create_user(?, ?, ?, ?, ?, ?)";
     var params = [
-      req.body.username, 
+      req.body.username,
       hash,
       req.body.name,
       req.body.role_id,
       req.body.email,
-      req.body.phone
+      req.body.phone,
     ];
-    connection.query(query, params, function(err, result) {
+    connection.query(query, params, function (err, result) {
       if (err) throw err;
       res.send(result);
     });
@@ -47,15 +47,10 @@ router.get("/api/view/:userid", function (req, res) {
 
 router.post("/api/register", function (req, res) {
   var password = req.body.password;
-  bcrypt.hash(password, 10, function(err, hash) {
-    if (err) throw (err);
+  bcrypt.hash(password, 10, function (err, hash) {
+    if (err) throw err;
     var query = "call sp_register(?, ?, ?, ?)";
-    var params = [
-      req.body.username,
-      hash,
-      req.body.email,
-      req.body.phone
-    ];
+    var params = [req.body.username, hash, req.body.email, req.body.phone];
     connection.query(query, params, function (err, result) {
       if (err) throw err;
       res.send(result);
@@ -63,10 +58,10 @@ router.post("/api/register", function (req, res) {
   });
 });
 
-router.post("/:user_id/api/add-address", function(req, res) {
+router.post("/:user_id/api/add-address", function (req, res) {
   var query = "call sp_add_address(?, ?, ?);";
   var params = [req.params.user_id, req.body.address, req.body.ward];
-  connection.query(query, params, function(err, result) {
+  connection.query(query, params, function (err, result) {
     if (err) throw err;
     res.send(result);
   });
@@ -111,12 +106,12 @@ router.post("/api/login", loginValidation, (req, res) => {
         });
       }
       if (!bResult) {
-          // throw bErr;
-          return res.status(401).send({
-            msg: "Username or password is incorrect!",
-          });
+        // throw bErr;
+        return res.status(401).send({
+          msg: "Username or password is incorrect!",
+        });
       }
-      
+
       connection.query(
         "SELECT * FROM roles WHERE id = ?",
         result[0].role_id,
@@ -127,7 +122,7 @@ router.post("/api/login", loginValidation, (req, res) => {
           const token = jwt.sign(
             { id: result[0].id },
             "the-super-strong-secrect",
-            { expiresIn: "1h" }
+            { expiresIn: "120d" }
           );
           connection.query(
             `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`,
@@ -183,6 +178,7 @@ router.post("/api/get-user", (req, res, next) => {
   );
 });
 
+
 router.post("/:user_id/api/change-password", function(req, res) {
   old_pass = req.body.old_pass;
   new_pass = req.body.new_pass;
@@ -211,7 +207,7 @@ router.post("/:user_id/api/change-password", function(req, res) {
 router.post("/api/delete/:userid", function(req, res) {
   var query = 'call sp_deactivate_user(?)';
   var params = req.params.userid;
-  connection.query(query, params, function(err, result) {
+  connection.query(query, params, function (err, result) {
     if (err) throw err;
     res.send(result);
   });
