@@ -4,6 +4,7 @@ var router = express.Router();
 require("dotenv").config({ path: "local.env" });
 
 const { Configuration, OpenAIApi } = require("openai");
+const { verifyToken } = require("../middlewares/verifyToken");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
