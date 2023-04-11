@@ -19,9 +19,36 @@ async function createMeeting(email) {
   
 };
 
+router.get('/pt/:id', function(req,res) {
+  var query = "select * from doctor_appointment where pt_id = ?";
+  var params = req.params.id;
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+router.get('/sched/:id', function(req,res) {
+  var query = "select * from doctor_appointment where sched_id = ?";
+  var params = req.params.id;
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+router.get('/time/:id', function(req, res) {
+  var query = "select * from appt_hour where time_id = ?";
+  if (req.params.id == 0) query = "select * from appt_hour";
+  connection.query(query, req.params.id, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
 router.post('/api/create', verifyToken, function(req, res) {
-  var appt_query = 'call sp_doctor_appointment(?,?,?)';
-  var appt_params = [req.body.pt_id, req.body.sched_id, req.body.hour_id];
+  var appt_query = 'call sp_doctor_appointment(?,?,?,?)';
+  var appt_params = [req.body.pt_id, req.body.doc_id, req.body.sched_id, req.body.hour_id];
   connection.query(appt_query, appt_params, function(err, result) {
     if (err) {
       throw err;
@@ -30,15 +57,17 @@ router.post('/api/create', verifyToken, function(req, res) {
     console.log(result);
     res.send(result)
     
-    if (result[0][0].error_message != null) 
+    if (result[0][0]?.error_message != null) 
     {
-      res.send(result[0][0].error_message)
+      res.send(result)
       return;
     }
 
+    var appt_id = result[0][0]?.id;
+
     var biz_email, biz_name, appt_day, appt_hour;
     var doc_query = 'call sp_appt_info(?)';
-    connection.query(doc_query, req.body.sched_id, async function(err, result) {
+    connection.query(doc_query, appt_id, async function(err, result) {
       if(err) {
         throw err;
         return;
@@ -74,11 +103,17 @@ router.post('/api/create', verifyToken, function(req, res) {
           console.log(response.start_url);
           var meeting_url = response.start_url;
 
+          var update_query = "update doctor_appointment set meeting_url = ? where id = ?";
+          var update_params = [meeting_url, appt_id];
+          connection.query(update_query, update_params, function(err, result) {
+            if(err) throw err;
+          });
+
           var pt_email;
           var pt_query = 'call sp_patient_email(?)';
           connection.query(pt_query, req.body.pt_id, function(err, result) {
             if (err) throw err;
-            pt_email = result[0][0].user_email;
+            pt_email = result[0][0].email;
 
             var mailOptions = { 
               from: 'noreply@domain.com',
@@ -123,10 +158,10 @@ router.post("/api/delete/:appt_id", verifyToken, function(req, res) {
       connection.query(appt_query, sched_id, function(err, appt_result) {
         if (err) throw err;
 
-        var biz_name = appt_result[0][0].business_name;
-        var biz_email = appt_result[0][0].email;
-        var appt_day = appt_result[0][0].workday;
-        var appt_hour = appt_result[0][0].appt_hour;
+        var biz_name = appt_result[0][0]?.business_name;
+        var biz_email = appt_result[0][0]?.email;
+        var appt_day = appt_result[0][0]?.workday;
+        var appt_hour = appt_result[0][0]?.appt_hour;
 
         var mailOptions = { 
           from: 'noreply@domain.com',

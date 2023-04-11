@@ -179,11 +179,6 @@ begin
 			select id user_role_id from patient where user_id = p_user_id;
 		elseif (p_role_id = 3) then
 			select id user_role_id from business where rep_user_id = p_user_id;
-		elseif (p_role_id = 4) then
-			if (select 1 = 1 from business where rep_user_id = p_user_id) then
-				select id user_role_id from business where rep_user_id = p_user_id;
-			else select id user_role_id from pharmacy_branch where user_id = p_user_id;
-            end if;
 		else select 0 user_role_id;
 		end if;
     commit;
@@ -289,6 +284,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_filter_by_area` //
 create procedure `sp_filter_by_area` (in p_type_id tinyint unsigned, in p_ward_id bigint unsigned)
 begin
@@ -299,24 +295,11 @@ begin
 			rollback;
 		end;
 	start transaction;
-		if (p_type_id = 1) then 
-        (
-			select biz.id, biz.business_name, addr.fulladdress from doctor_address da
-				left join business biz on da.business_id = biz.id
-				left join address addr on da.address_id = addr.id
-                left join ward wrd on addr.ward_id = wrd.id
-			where biz.type_id = p_type_id and wrd.id = p_ward_id
-        );
-        else
-        (
-			select biz.id, concat(biz.business_name,': ', br.branch_name ) business_name, addr.fulladdress 
-            from pharmacy_branch br
-				left join business biz on br.business_id = biz.id
-				left join address addr on br.address_id = addr.id
-                left join ward wrd on addr.ward_id = wrd.id
-			where biz.type_id = p_type_id and wrd.id = p_ward_id
-        );
-        end if;
+		select biz.id, biz.business_name, addr.fulladdress from doctor_address da
+			left join business biz on da.business_id = biz.id
+			left join address addr on da.address_id = addr.id
+			left join ward wrd on addr.ward_id = wrd.id
+		where biz.type_id = p_type_id and wrd.id = p_ward_id;
     commit;
 end //
 
@@ -348,6 +331,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_branch_by_pharmacy` //
 create procedure `sp_branch_by_pharmacy` (in p_business_id bigint unsigned)
 begin
@@ -358,13 +342,14 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select pb.id, br.branch_name, addr.fulladdress
-        from pharmacy_branch pb
+		select biz.id, biz.business_name, addr.fulladdress
+        from business biz
 			left join address addr on pb.address_id = addr.id
-        where pb.business_id = p_business_id;
+        where biz.branch_of = p_business_id;
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_filter_clinics` //
 create procedure `sp_filter_clinics` (in p_dept_id bigint unsigned, 
 	in p_ward_id bigint unsigned, in p_district_id bigint unsigned, in p_province_id bigint unsigned)
@@ -381,23 +366,20 @@ begin
             when p_ward_id is not null then (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
 					left join doctor_department dd on dd.doc_id = biz.id
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 				where biz.type_id = 1 and p_dept_id = dd.dept_id and addr.ward_id = p_ward_id
 			);
 			when p_ward_id is null and p_district_id is not null then (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
 					left join doctor_department dd on dd.doc_id = biz.id
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 					left join ward wrd on wrd.id = addr.ward_id
 				where biz.type_id = 1 and p_dept_id = dd.dept_id and wrd.district_id = p_district_id
                 );
 			when p_ward_id is null and p_district_id is null and p_province_id is not null then (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
 					left join doctor_department dd on dd.doc_id = biz.id
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 					left join ward wrd on wrd.id = addr.ward_id
 					left join district dist on dist.id = wrd.district_id
 				where biz.type_id = 1 and p_dept_id = dd.dept_id and dist.province_id = p_province_id
@@ -405,8 +387,7 @@ begin
 			else (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
 					left join doctor_department dd on dd.doc_id = biz.id
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 				where biz.type_id = 1 and p_dept_id = dd.dept_id
 			);
 			end case;
@@ -414,29 +395,25 @@ begin
 			case 
             when p_ward_id is not null then (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 				where biz.type_id = 1 and addr.ward_id = p_ward_id
 			);
 			when p_ward_id is null and p_district_id is not null then (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 					left join ward wrd on wrd.id = addr.ward_id
 				where biz.type_id = 1 and wrd.district_id = p_district_id
                 );
 			when p_ward_id is null and p_district_id is null and p_province_id is not null then (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 					left join ward wrd on wrd.id = addr.ward_id
 					left join district dist on dist.id = wrd.district_id
 				where biz.type_id = 1 and dist.province_id = p_province_id
 			);
 			else (
 				select biz.id, biz.business_name, addr.fulladdress from business biz
-					left join doctor_address da on biz.id = da.business_id
-					left join address addr on addr.id = da.address_id
+					left join address addr on addr.id = biz.address_id
 				where biz.type_id = 1
 			);
 			end case;
@@ -444,6 +421,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_filter_pharmacies` //
 create procedure `sp_filter_pharmacies` (
 in p_ward_id bigint unsigned, in p_district_id bigint unsigned, in p_province_id bigint unsigned)
@@ -457,38 +435,35 @@ begin
 	start transaction;
 		case 
         when p_ward_id is not null then (
-			select biz.id, concat(biz.business_name,': ', br.branch_name ) business_name, addr.fulladdress from business biz
-				left join pharmacy_branch br on biz.id = br.business_id
-				left join address addr on addr.id = br.address_id
+			select biz.id, biz.business_name, addr.fulladdress from business biz
+				left join address addr on addr.id = biz.address_id
 			where biz.type_id = 2 and addr.ward_id = p_ward_id
 		);
 		when p_ward_id is null and p_district_id is not null then (
-			select biz.id, concat(biz.business_name,': ', br.branch_name ) business_name, addr.fulladdress from business biz
-				left join pharmacy_branch br on biz.id = br.business_id
-				left join address addr on addr.id = br.address_id
+			select biz.id, biz.business_name, addr.fulladdress from business biz
+				left join address addr on addr.id = biz.address_id
 				left join ward wrd on wrd.id = addr.ward_id
 			where biz.type_id = 2 and wrd.district_id = p_district_id
 		);
 		when p_ward_id is null and p_district_id is null and p_province_id is not null then (
-			select biz.id, concat(biz.business_name,': ', br.branch_name ) business_name, addr.fulladdress from business biz
-				left join pharmacy_branch br on biz.id = br.business_id
-				left join address addr on addr.id = br.address_id
+			select biz.id, biz.business_name, addr.fulladdress from business biz
+				left join address addr on addr.id = biz.address_id
 				left join ward wrd on wrd.id = addr.ward_id
 				left join district dist on dist.id = wrd.district_id
 			where biz.type_id = 2 and dist.province_id = p_province_id
 		);
 		else (
-			select biz.id, concat(biz.business_name,': ', br.branch_name ) business_name, addr.fulladdress from business biz
-				left join pharmacy_branch br on biz.id = br.business_id
-				left join address addr on addr.id = br.address_id
+			select biz.id, biz.business_name, addr.fulladdress from business biz
+				left join address addr on addr.id = biz.address_id
 			where biz.type_id = 2
 		);
 		end case;
     commit;
 end //
 
-drop procedure if exists `sp_branch_details` //
-create procedure `sp_branch_details` (in p_pharmacy_id bigint unsigned, in p_branch_id bigint unsigned)
+delimiter //
+drop procedure if exists `sp_pharmacy_medicine` //
+create procedure `sp_pharmacy_medicine` (in p_pharmacy_id bigint unsigned)
 begin
 	declare exit handler for sqlexception
 		begin
@@ -497,17 +472,13 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select br.id, br.branch_name, addr.fulladdress 
-        from pharmacy_branch br
-			left join address addr on addr.id = br.address_id
-        where business_id = p_pharmacy_id and br.id = p_branch_id;
+		select * from pharmacy_medicine where pharmacy_id = p_pharmacy_id;
 	commit;
 end //
 
 delimiter //
 drop procedure if exists `sp_doctor_schedule` //
-create procedure `sp_doctor_schedule` (p_doctor_id bigint unsigned, 
-	p_day date)
+create procedure `sp_doctor_schedule` (p_doctor_id bigint unsigned, p_day date, p_time tinyint unsigned)
 begin
 	declare exit handler for sqlexception
 		begin
@@ -516,13 +487,19 @@ begin
 			rollback;
 		end;
 	start transaction;
-		insert into work_schedule values(null, p_doctor_id, p_day, now());
-        select last_insert_id() id, "Update sucessfull" message;
+		if (select 1 = 1 from work_schedule where doc_id = p_doctor_id and workday = p_day and time_id = p_time and status = 1) then
+			signal sqlstate '45021'
+			set message_text = 'Schedule already registered'; 
+		end if;
+		insert into work_schedule values(null, p_doctor_id, p_day, p_time, 1, now());
+        select last_insert_id() id, "Created sucessfull" message;
 	commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_doctor_appointment` //
-create procedure `sp_doctor_appointment` (p_patient_id bigint unsigned, p_sched_id bigint unsigned, p_hour_id bigint unsigned)
+create procedure `sp_doctor_appointment` (p_patient_id bigint unsigned, p_doc_id bigint unsigned, 
+	p_sched_id bigint unsigned, p_hour_id bigint unsigned)
 begin
 	declare exit handler for sqlexception
 		begin
@@ -535,7 +512,7 @@ begin
 			signal sqlstate '45010'
 			set message_text = 'Schedule is not free';
 		else
-			insert into doctor_appointment values(null, p_patient_id, p_sched_id, p_hour_id, now(), 1);
+			insert into doctor_appointment values(null, p_patient_id, p_doc_id, p_sched_id, p_hour_id, null, now(), 1);
 			select last_insert_id() id, 'Appointment made' message;
 		end if;
 	commit;
@@ -574,6 +551,8 @@ begin
 	commit;
 end //
 
+
+delimiter //
 drop procedure if exists `sp_patient_email` //
 create procedure `sp_patient_email` (p_pt_id bigint unsigned)
 begin
@@ -585,13 +564,14 @@ begin
 		end;
 	start transaction;
 		select usr.email from patient pt 
-			left join users usr on biz.user_id = usr.id
+			left join users usr on pt.user_id = usr.id
 		where pt.id = p_pt_id;
 	commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_appt_info` //
-create procedure `sp_appt_info` (p_sched_id bigint unsigned)
+create procedure `sp_appt_info` (p_appt_id bigint unsigned)
 begin
 	declare exit handler for sqlexception
 		begin
@@ -600,12 +580,13 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select biz.business_name, usr.email, sched.workday, hr.details appt_hour from work_schedule sched 
-			left join business biz on sched.doc_id = biz.id
-            left join doctor_appointment appt on appt.sched_id = sched.id
+		select biz.business_name, usr.email, ifnull(sched.workday, curdate()) workday, ifnull(hr.details, 'NaN') appt_hour 
+        from doctor_appointment appt 
+			left join work_schedule sched on appt.sched_id = sched.id
+			left join business biz on appt.doc_id = biz.id
             left join appt_hour hr on hr.id = appt.hour_id
 			left join users usr on biz.rep_user_id = usr.id
-		where sched.id = p_sched_id;
+		where appt.id = p_appt_id;
 	commit;
 end //
 
@@ -780,6 +761,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists sp_add_address //
 create procedure sp_add_address(p_user_id bigint unsigned, p_address text, p_ward_id bigint unsigned)
 begin
@@ -812,13 +794,9 @@ begin
             where usr.id = p_user_id;
 			update patient set address_id = v_address_id where id = v_user_role_id;
 		elseif (v_role_id = 3) then
-			select doc.id into v_user_role_id from business doc join users usr on doc.rep_user_id = usr.id
+			select biz.id into v_user_role_id from business biz join users usr on doc.rep_user_id = usr.id
             where usr.id = p_user_id;
-            update doctor_address set address_id = v_address_id where id = v_user_role_id;
-		elseif (v_role_id = 4) then
-			select br.id into v_user_role_id from pharmacy_branch br join users usr on br.user_id = usr.id
-            where usr.id = p_user_id;
-            update pharmacy_branch set address_id = v_address_id where id = v_user_role_id;
+            update business set address_id = v_address_id where id = v_user_role_id;
 		end if;
 		select 'Address added' message, v_user_role_id id, v_address_id address_id;
     commit;
@@ -883,8 +861,7 @@ begin
 		end;
 	start transaction;
 		select biz.id, biz.business_name, addr.fulladdress, usr.email, usr.phone from business biz
-			join doctor_address da on da.business_id = biz.id
-            left join address addr on da.address_id = addr.id
+            left join address addr on biz.address_id = addr.id
             left join users usr on biz.rep_user_id = usr.id
 		where biz.id = p_biz_id;
 	commit;
@@ -903,6 +880,59 @@ begin
 	start transaction;
 		insert into patient_history values(null, p_appt_id, p_diagnosis, p_pres_id, now());
         select 'Success' message, last_insert_id() id;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists sp_schedule_details //
+create procedure sp_schedule_details(p_sched_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select * from work_schedule
+		where id = p_sched_id;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists sp_get_schedule //
+create procedure sp_get_schedule(p_doc_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select * from work_schedule
+		where doc_id = p_doc_id
+        order by workday desc;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists sp_delete_schedule //
+create procedure sp_delete_schedule(p_sched_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		if (select 1 = 1 from doctor_appointment where sched_id = p_sched_id and status = 1) then
+			signal sqlstate '45022'
+            set message_text = 'An appointment is made on that day';
+		end if;
+		update work_schedule set status = 0 where id = p_sched_id;
+        select 'Success' message;
 	commit;
 end //
 

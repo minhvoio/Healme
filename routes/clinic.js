@@ -35,7 +35,7 @@ router.get("/dept/:deptid", function (req, res) {
 router.post("/search", function (req, res) {
   var query =
     "call sp_filter_clinics(nullif(?, 0), nullif(?, 0), nullif(?, 0), nullif(?, 0))";
-  var params = [req.body.dept, req.body.wrd, req.body.dist, req.body.prvn];
+  var params = [req.body.dept, req.body.ward, req.body.district, req.body.proviince];
   connection.query(query, params, function (err, result) {
     if (err) throw err;
     res.send(result);
