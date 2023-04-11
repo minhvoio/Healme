@@ -88,19 +88,12 @@ create table business
     business_name text,
     rep_user_id bigint unsigned,
     type_id tinyint unsigned,
+    address_id bigint unsigned,
+    branch_of bigint unsigned,
     created_date datetime,
     constraint fk_business_users foreign key(rep_user_id) references users(id),
-    constraint fk_business_type foreign key(type_id) references business_type(id)
-);
-
-create table doctor_address
-(
-	id bigint unsigned primary key auto_increment,
-    business_id bigint unsigned,
-    address_id bigint unsigned,
-    created_date datetime,
-    constraint fk_doctor_address foreign key(business_id) references business(id),
-    constraint fk_address_doctor foreign key(address_id) references address(id)
+    constraint fk_business_address foreign key(address_id) references address(id),
+    constraint fk_business_branch foreign key(branch_of) references business(id)
 );
 
 create table medicine
@@ -195,33 +188,24 @@ create table doctor_appointment
 (
 	id bigint unsigned primary key auto_increment,
     pt_id bigint unsigned,
+    doc_id bigint unsigned,
     sched_id bigint unsigned,
     hour_id tinyint unsigned,
     created_date datetime,
     status tinyint unsigned,
     constraint fk_appt_pt foreign key(pt_id) references patient(id),
+    constraint fk_appt_doc foreign key(doc_id) references business(id),
     constraint fk_appt_sched foreign key(sched_id) references work_schedule(id),
     constraint fk_appt_hour foreign key(hour_id) references appt_hour(id)
-);
-
-create table pharmacy_branch
-(
-	id bigint unsigned primary key auto_increment,
-    business_id bigint unsigned,
-    user_id bigint unsigned,
-    address_id bigint unsigned,
-    constraint fk_branch_business foreign key(business_id) references business(id),
-    constraint fk_branch_users foreign key(user_id) references users(id),
-    constraint fk_branch_addr foreign key(address_id) references address(id)
 );
 
 create table branch_medicine
 (
 	id bigint unsigned primary key auto_increment,
-    branch_id bigint unsigned,
+    pharmacy_id bigint unsigned,
     medicine_id bigint unsigned,
     stock int,
     price int,
-    constraint fk_medicine_branch foreign key(branch_id) references pharmacy_branch(id),
+    constraint fk_medicine_pharmacy foreign key(pharmacy_id) references business(id),
     constraint fk_branch_medicine foreign key(medicine_id) references medicine(id)
 );

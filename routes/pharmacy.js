@@ -12,7 +12,7 @@ router.get('/', function(req, res, next) {
   });
 });
 router.get('/:pharmacyID', function(req, res, next) {
-  var query = "select * from business where id = ? and type_id = 2";
+  var query = "select * from business where id = ?";
   var params = req.params.pharmacyID;
   connection.query(query, params, function (err, result, fields) {
       if (err) throw err;
@@ -30,7 +30,7 @@ router.get('/:pharmacyID/branch', function(req, res, next) {
 });
 router.post('/search', function(req, res) {
   var query = "call sp_filter_pharmacies(nullif(?, 0), nullif(?, 0), nullif(?, 0))";
-  var params = [req.body.wrd, req.body.dist, req.body.prvn];
+  var params = [req.body.ward, req.body.district, req.body.proviince];
   connection.query(query, params, function (err, result) {
     if (err) throw err;
     res.send(result);

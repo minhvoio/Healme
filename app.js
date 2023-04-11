@@ -11,7 +11,7 @@ var usersRouter = require("./routes/users");
 var patientRouter = require("./routes/patient");
 var clinicRouter = require("./routes/clinic");
 var pharmacyRouter = require("./routes/pharmacy");
-var branchRouter = require("./routes/branch");
+
 var areaRouter = require("./routes/area");
 var apptRouter = require("./routes/appt");
 
@@ -44,7 +44,6 @@ app.use("/users", usersRouter);
 app.use("/patient", patientRouter);
 app.use("/clinic", clinicRouter);
 app.use("/pharmacy", pharmacyRouter);
-app.use("/branch", branchRouter);
 app.use("/area", areaRouter);
 app.use("/appt", apptRouter);
 app.use("/medicine", medicineRouter);

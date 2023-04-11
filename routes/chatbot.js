@@ -27,7 +27,7 @@ async function generateResponse(question, maxWords = 3500, creativity = 0.7) {
   return result;
 }
 
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", async (req, res) => {
   const question = req.body.question;
   const maxWords = req.body.maxWords;
   const creativity = req.body.creativity;
