@@ -134,6 +134,7 @@ begin
     commit;
 end //
 
+delimiter //
 drop procedure if exists `sp_create_patient` //
 create procedure `sp_create_patient`(in p_user_id bigint unsigned, in p_fullname varchar(255), in p_dob datetime, 
 	in p_gender varchar(8), in p_address text, in p_ward_id bigint unsigned)
@@ -159,7 +160,32 @@ begin
 		select name into v_province from province where id = v_province_id;
 		insert into address values(null, concat_ws(', ', p_address, v_ward, v_district, v_province), p_ward_id, now());
 		insert into patient values(null, p_user_id, p_fullname, p_dob, p_gender, last_insert_id(), now());
-		select 'Profile created successfully' message;
+		select 'Profile created successfully' message, last_insert_id() id;
+    commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_get_user_role_id` //
+create procedure `sp_get_user_role_id`(in p_user_id bigint unsigned, in p_role_id tinyint unsigned)
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		if (p_role_id = 2) then
+			select id user_role_id from patient where user_id = p_user_id;
+		elseif (p_role_id = 3) then
+			select id user_role_id from business where rep_user_id = p_user_id;
+		elseif (p_role_id = 4) then
+			if (select 1 = 1 from business where rep_user_id = p_user_id) then
+				select id user_role_id from business where rep_user_id = p_user_id;
+			else select id user_role_id from pharmacy_branch where user_id = p_user_id;
+            end if;
+		else select 0 user_role_id;
+		end if;
     commit;
 end //
 

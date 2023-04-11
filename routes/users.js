@@ -82,9 +82,8 @@ router.post("/api/update/:userid", function (req, res) {
 });
 
 router.post("/api/login", loginValidation, (req, res) => {
-  var params = [req.body.username];
   var query = "SELECT * FROM users WHERE username = ? AND account_status = 1;";
-  var params = [req.body.username, req.body.password];
+  var params = req.body.username;
   connection.query(query, params, function (err, result) {
     if (err) {
       // throw err;
@@ -112,31 +111,35 @@ router.post("/api/login", loginValidation, (req, res) => {
         });
       }
 
-      connection.query(
-        "SELECT * FROM roles WHERE id = ?",
-        result[0].role_id,
-        (roleErr, roleRes) => {
+      var roleQuery = "SELECT * FROM roles WHERE id = ?";
+      var roleParams = result[0].role_id;
+      connection.query(roleQuery, roleParams, (roleErr, roleRes) => {
           if (roleErr) throw roleErr;
           const roleTitle = roleRes[0].title;
           result[0].role = roleTitle;
-          const token = jwt.sign(
+          const token = jwt.sign (
             { id: result[0].id },
             "the-super-strong-secret",
             { expiresIn: "120d" }
           );
-          connection.query(
-            `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`,
-            (updateErr, updateRes) => {
-              if (updateErr) throw updateErr;
-              return res.status(200).send({
-                msg: "Logged in!",
-                token,
-                user: result[0],
+
+          var userRoleQuery = "call sp_get_user_role_id(?, ?)";
+          var userRoleParams = [result[0].id, result[0].role_id];
+          connection.query(userRoleQuery, userRoleParams, function(userRoleErr, userRoleResult) {
+            if (userRoleErr) throw userRoleErr
+            result[0].user_role_id =  userRoleResult[0][0].user_role_id
+
+            var updateQuery = `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`;
+            connection.query(updateQuery ,(updateErr, updateRes) => {
+                if (updateErr) throw updateErr;
+                return res.status(200).send({
+                  msg: "Logged in!",
+                  token,
+                  user: result[0],
+                });
               });
-            }
-          );
-        }
-      );
+            });
+        });
     });
   });
 });
@@ -195,6 +198,7 @@ router.post("/:user_id/api/change-password", function (req, res) {
           msg: "Password is incorrect!",
         });
       }
+      
       bcrypt.hash(new_pass, 10, function (err, hash) {
         var query = "call sp_change_password(?, ?)";
         var params = [req.params.user_id, hash];
