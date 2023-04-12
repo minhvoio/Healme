@@ -359,7 +359,7 @@ begin
 	start transaction;
 		select biz.id, biz.business_name, addr.fulladdress
         from business biz
-			left join address addr on pb.address_id = addr.id
+			left join address addr on biz.address_id = addr.id
         where biz.branch_of = p_business_id;
     commit;
 end //
