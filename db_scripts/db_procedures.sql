@@ -1039,4 +1039,44 @@ begin
 	commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_patient_appt` //
+create procedure `sp_patient_appt` (in p_pt_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select appt.id, biz.business_name, sched.workday, ah.details, appt.meeting_url 
+        from doctor_appointment appt
+			left join appt_hour ah on appt.hour_id = ah.id
+            left join work_schedule sched on sched.id = appt.sched_id
+            left join business biz on appt.doc_id = biz.id
+        where appt.pt_id = p_pt_id;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_schedule_appt` //
+create procedure `sp_schedule_appt` (in p_sched_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		SELECT sched.id, sched.doc_id, sched.workday, sched.time_id, ah.details, appt.id appt_id, appt.pt_id
+		from work_schedule sched
+			left join appt_hour ah on sched.time_id = ah.time_id 
+			left join doctor_appointment appt on appt.sched_id = sched.id and appt.hour_id = ah.id
+		where sched.id = p_sched_id
+		order by workday desc, ah.id asc;
+	commit;
+end //
+
 delimiter ;
