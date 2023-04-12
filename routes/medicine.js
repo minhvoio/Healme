@@ -10,7 +10,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/search", verifyToken, (req, res) => {
-  var query = "SELECT * FROM healthcare.medicine WHERE search_text LIKE ?";
+  var query = "call sp_search_medicine(?)";
   console.log(req.body.search_text);
   // res.send(req.body.search_text);
   connection.query(query, req.body.search_text, (err, result) => {
