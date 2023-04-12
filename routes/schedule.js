@@ -21,4 +21,22 @@ router.post('/api/create', verifyToken, function(req, res) {
     });
 });
 
+router.post('api/update/:id', verifyToken, function(req, res) {
+    var query = "call sp_update_schedule(?,?)";
+    var params = [req.params.id, req.body.time_id];
+    connection.query(query, params, function(err, result) {
+        if (err) throw err;
+        res.send(result);
+    });
+});
+
+router.post('api/delete/:id', verifyToken, function(req, res) {
+    var query = "call sp_delete_schedule(?,?)";
+    var params = req.params.id;
+    connection.query(query, params, function(err, result) {
+        if (err) throw err;
+        res.send(result);
+    });
+});
+
 module.exports = router;

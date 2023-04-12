@@ -939,6 +939,26 @@ begin
 end //
 
 delimiter //
+drop procedure if exists sp_update_schedule //
+create procedure sp_update_schedule(p_sched_id bigint unsigned, p_time_id tinyint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		if (select 1 = 1 from work_schedule where sched_id = p_sched_id and time_id = p_time_id and status = 1) then
+			signal sqlstate '45022'
+            set message_text = 'Schedule already registered';
+		end if;
+		update work_schedule set time_id = p_time_id where id = p_sched_id;
+        select 'Success' message;
+	commit;
+end //
+
+delimiter //
 drop procedure if exists sp_delete_schedule //
 create procedure sp_delete_schedule(p_sched_id bigint unsigned)
 begin
