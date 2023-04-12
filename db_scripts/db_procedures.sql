@@ -267,6 +267,21 @@ begin
     commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_search_medicine` //
+create procedure `sp_search_medicine` (in p_searchtext text)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select * from medicine where title like concat('%', p_searchtext, '%');
+    commit;
+end //
+
 drop procedure if exists `sp_filter_by_department` //
 create procedure `sp_filter_by_department` (in p_dept_id text)
 begin
@@ -472,7 +487,11 @@ begin
 			rollback;
 		end;
 	start transaction;
-		select * from pharmacy_medicine where pharmacy_id = p_pharmacy_id;
+		select pm.*, biz.business_name, med.title
+        from pharmacy_medicine pm
+			left join business biz on pm.pharmacy_id = biz.id
+            left join medicine med on pm.medicine_id = med.id
+        where pharmacy_id = p_pharmacy_id and status = 1;
 	commit;
 end //
 
@@ -590,6 +609,7 @@ begin
 	commit;
 end //
 
+delimiter //
 drop procedure if exists sp_prescription_details //
 create procedure sp_prescription_details(p_pres_id bigint unsigned)
 begin
@@ -664,6 +684,7 @@ begin
 	commit;
 end //
 
+delimiter //
 drop procedure if exists sp_delete_prescription_details //
 create procedure sp_delete_prescription_details(p_pd_id bigint unsigned)
 begin
@@ -680,6 +701,7 @@ begin
 	commit;
 end //
 
+delimiter //
 drop procedure if exists sp_update_prescription_details //
 create procedure sp_update_prescription_details(p_pd_id bigint unsigned, p_med_id bigint unsigned, p_note text)
 begin
@@ -932,6 +954,67 @@ begin
             set message_text = 'An appointment is made on that day';
 		end if;
 		update work_schedule set status = 0 where id = p_sched_id;
+        select 'Success' message;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_pharmacy_add_medicine` //
+create procedure `sp_pharmacy_add_medicine` (in p_pharmacy_id bigint unsigned, p_medicine_id bigint unsigned, 
+	p_stock int, p_price bigint)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		if (select 1 = 1 from pharmacy_medicine where pharmacy_id = p_pharmacy_id and medicine_id = p_medicine_id) then
+			signal sqlstate '45023'
+            set message_text = 'Medicine already added';
+		end if;
+        
+        insert into pharmacy_medicine values (null, p_pharmacy_id, p_medicine_id, p_stock, p_price, now(), 1);
+        select last_insert_id() id, 'Added successfully' message;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_pharmacy_update_medicine` //
+create procedure `sp_pharmacy_update_medicine` (in p_id bigint unsigned, p_stock int, p_price bigint)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		if (p_stock is not null) then 
+			update pharmacy_medicine set stock = p_stock where id = p_id;
+		end if;
+        
+        if (p_price is not null) then 
+			update pharmacy_medicine set price = p_price where id = p_id;
+		end if;
+        
+        select 'Updated successfully' message;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_pharmacy_delete_medicine` //
+create procedure `sp_pharmacy_delete_medicine` (in p_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		update pharmacy_medicine set status = 0 where id = p_id;
         select 'Success' message;
 	commit;
 end //
