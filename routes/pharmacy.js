@@ -59,7 +59,7 @@ router.post('/:id/medicine/add', function(req, res) {
 });
 
 router.post('/medicine/update/:pm_id', function(req, res) {
-  var query = 'call sp_pharmacy_add_medicine(?, ?, ?)';
+  var query = 'call sp_pharmacy_update_medicine(?, ?, ?)';
   var params = [req.params.pm_id, req.body.stock, req.body.price];
   connection.query(query, params, function(err, result) {
     if (err) throw err;
