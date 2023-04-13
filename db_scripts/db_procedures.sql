@@ -740,11 +740,12 @@ end //
 
 delimiter //
 drop procedure if exists sp_create_user//
-create procedure sp_create_user(p_username varchar(255), p_pass text, p_name varchar(255),
+CREATE DEFINER=`healme`@`%` PROCEDURE `sp_create_user`(p_username varchar(255), p_pass text, p_name varchar(255),
 	p_role_id tinyint unsigned, p_email varchar(255), p_phone varchar(255))
 begin
 	declare v_biz_type bigint unsigned;
     declare v_user_id bigint unsigned;
+    declare v_user_role_id bigint unsigned;
     
     declare exit handler for sqlexception
 		begin
@@ -772,12 +773,14 @@ begin
 					set v_biz_type = 1;
 				elseif (p_role_id = 4) then 
 					set v_biz_type = 2;
+                    set p_role_id = 3;
 				end if;
-				insert into business values(null, p_name, v_user_id, v_biz_type, now());
+				insert into business(business_name, rep_user_id, type_id, created_date) values(p_name, v_user_id, v_biz_type, now());
 			else insert into patient(user_id, fullname, created_date) values(v_user_id, p_name, now());
 			end if;
+            set v_user_role_id = last_insert_id();
             
-            select 'User created!' message, v_user_id user_id;
+            select 'User created!' message, v_user_id user_id, p_role_id role_id, v_user_role_id user_role_id, v_biz_type;
 		end;
 	end if;
     commit;
@@ -917,7 +920,7 @@ begin
 		end;
 	start transaction;
 		select * from work_schedule
-		where id = p_sched_id;
+		where id = p_sched_id and status = 1;
 	commit;
 end //
 
@@ -933,7 +936,7 @@ begin
 		end;
 	start transaction;
 		select * from work_schedule
-		where doc_id = p_doc_id
+		where doc_id = p_doc_id and status = 1
         order by workday desc;
 	commit;
 end //
@@ -990,7 +993,7 @@ begin
 			rollback;
 		end;
 	start transaction;
-		if (select 1 = 1 from pharmacy_medicine where pharmacy_id = p_pharmacy_id and medicine_id = p_medicine_id) then
+		if (select 1 = 1 from pharmacy_medicine where pharmacy_id = p_pharmacy_id and medicine_id = p_medicine_id and status = 1) then
 			signal sqlstate '45023'
             set message_text = 'Medicine already added';
 		end if;
@@ -1072,9 +1075,9 @@ begin
 	start transaction;
 		SELECT sched.id, sched.doc_id, sched.workday, sched.time_id, ah.details, appt.id appt_id, appt.pt_id
 		from work_schedule sched
-			left join appt_hour ah on sched.time_id = ah.time_id 
-			left join doctor_appointment appt on appt.sched_id = sched.id and appt.hour_id = ah.id
-		where sched.id = p_sched_id
+			left join appt_hour ah on sched.time_id = ah.time_id
+			left join doctor_appointment appt on appt.sched_id = sched.id and appt.hour_id = ah.id and appt.status = 1
+		where sched.id = p_sched_id and sched.status = 1
 		order by workday desc, ah.id asc;
 	commit;
 end //
@@ -1097,7 +1100,7 @@ begin
             left join business biz on biz.id = appt.doc_id
 			left join work_schedule sched on appt.sched_id = sched.id
 			left join appt_hour ah on appt.hour_id = ah.id 
-		where appt.id = p_appt_id;
+		where appt.id = p_appt_id and appt.status = 1;
 	commit;
 end //
 

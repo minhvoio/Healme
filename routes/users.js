@@ -11,7 +11,7 @@ var connection = require("../models/dbconfig");
 router.get("/", function (req, res) {
   var query = "call sp_all_users()";
   connection.query(query, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -19,7 +19,7 @@ router.get("/", function (req, res) {
 router.post("/api/create", function (req, res) {
   var password = req.body.password;
   bcrypt.hash(password, 10, function (err, hash) {
-    if (err) throw err;
+    if (err) return res.send(err);
 
     var query = "call sp_create_user(?, ?, ?, ?, ?, ?)";
     var params = [
@@ -31,7 +31,7 @@ router.post("/api/create", function (req, res) {
       req.body.phone,
     ];
     connection.query(query, params, function (err, result) {
-      if (err) throw err;
+      if (err) return res.send(err);
       res.send(result);
     });
   });
@@ -40,7 +40,7 @@ router.post("/api/create", function (req, res) {
 router.get("/api/view/:userid", function (req, res) {
   var query = "call sp_view_profile(?)";
   connection.query(query, req.params.userid, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -48,11 +48,11 @@ router.get("/api/view/:userid", function (req, res) {
 router.post("/api/register", function (req, res) {
   var password = req.body.password;
   bcrypt.hash(password, 10, function (err, hash) {
-    if (err) throw err;
+    if (err) return res.send(err);
     var query = "call sp_register(?, ?, ?, ?)";
     var params = [req.body.username, hash, req.body.email, req.body.phone];
     connection.query(query, params, function (err, result) {
-      if (err) throw err;
+      if (err) return res.send(err);
       res.send(result);
     });
   });
@@ -62,7 +62,7 @@ router.post("/:user_id/api/add-address", function (req, res) {
   var query = "call sp_add_address(?, ?, ?);";
   var params = [req.params.user_id, req.body.address, req.body.ward];
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -76,7 +76,7 @@ router.post("/api/update/:userid", function (req, res) {
     req.body.phone,
   ];
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -86,7 +86,7 @@ router.post("/api/login", loginValidation, (req, res) => {
   var params = req.body.username;
   connection.query(query, params, function (err, result) {
     if (err) {
-      // throw err;
+      // return res.send(err);
       return res.status(400).send({
         msg: err,
       });
@@ -114,7 +114,7 @@ router.post("/api/login", loginValidation, (req, res) => {
       var roleQuery = "SELECT * FROM roles WHERE id = ?";
       var roleParams = result[0].role_id;
       connection.query(roleQuery, roleParams, (roleErr, roleRes) => {
-          if (roleErr) throw roleErr;
+          if (roleErr) return res.send(roleErr);
           const roleTitle = roleRes[0].title;
           result[0].role = roleTitle;
           const token = jwt.sign (
@@ -126,12 +126,12 @@ router.post("/api/login", loginValidation, (req, res) => {
           var userRoleQuery = "call sp_get_user_role_id(?, ?)";
           var userRoleParams = [result[0].id, result[0].role_id];
           connection.query(userRoleQuery, userRoleParams, function(userRoleErr, userRoleResult) {
-            if (userRoleErr) throw userRoleErr
+            if (userRoleErr) return res.send(userRoleErr)
             result[0].user_role_id =  userRoleResult[0][0]?.user_role_id
 
             var updateQuery = `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`;
             connection.query(updateQuery ,(updateErr, updateRes) => {
-                if (updateErr) throw updateErr;
+                if (updateErr) return res.send(updateErr);
                 return res.status(200).send({
                   msg: "Logged in!",
                   token,
@@ -163,14 +163,14 @@ router.post("/api/get-user", (req, res, next) => {
     decoded.id,
 
     function (error, results, fields) {
-      if (error) throw error;
+      if (error) return res.send(error);
 
       connection.query(
         "SELECT * FROM roles WHERE id = ?",
         results[0].role_id,
 
         (roleErr, roleRes) => {
-          if (roleErr) throw roleErr;
+          if (roleErr) return res.send(roleErr);
           const roleTitle = roleRes[0].title;
           results[0].role = roleTitle;
 
@@ -190,7 +190,7 @@ router.post("/:user_id/api/change-password", function (req, res) {
   new_pass = req.body.new_pass;
   var pass_query = "select pass from users where id = ?;";
   connection.query(pass_query, req.params.user_id, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     bcrypt.compare(old_pass, result[0].pass, function (bErr, bResult) {
       if (bErr) throw bErr;
       if (!bResult) {
@@ -203,7 +203,7 @@ router.post("/:user_id/api/change-password", function (req, res) {
         var query = "call sp_change_password(?, ?)";
         var params = [req.params.user_id, hash];
         connection.query(query, params, function (err, result) {
-          if (err) throw err;
+          if (err) return res.send(err);
           res.send(result);
         });
       });
@@ -215,7 +215,7 @@ router.post("/api/delete/:userid", function (req, res) {
   var query = "call sp_deactivate_user(?)";
   var params = req.params.userid;
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });

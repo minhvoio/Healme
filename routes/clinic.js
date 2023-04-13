@@ -7,7 +7,7 @@ const connection = require("../models/dbconfig");
 router.get("/", function (req, res, next) {
   var query = "select * from business where type_id = 1";
   connection.query(query, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -15,7 +15,7 @@ router.get("/", function (req, res, next) {
 router.get("/:id", function(req, res) {
   var query = "call sp_get_clinic(?)";
   connection.query(query, req.params.id, function(err, result) {
-    if(err) throw err;
+    if(err) return res.send(err);
     res.send(result);
   });
 });
@@ -27,7 +27,7 @@ router.get("/dept/:deptid", function (req, res) {
     query = "select * from business where type_id = 1";
   }
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -37,7 +37,7 @@ router.post("/search", function (req, res) {
     "call sp_filter_clinics(nullif(?, 0), nullif(?, 0), nullif(?, 0), nullif(?, 0))";
   var params = [req.body.dept, req.body.ward, req.body.district, req.body.proviince];
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
