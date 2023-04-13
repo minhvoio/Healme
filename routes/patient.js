@@ -11,7 +11,9 @@ router.get("/", function (req, res, next) {
 router.get("/:patientid", verifyToken, function (req, res) {
   var query = "call sp_patient_profile(?)";
   connection.query(query, req.params.patientid, function (err, result) {
-    if (err) throw err;
+    if (err) {
+      return res.send(err);
+  }
     res.send(result);
   });
 });
@@ -27,7 +29,7 @@ router.post("/api/create", function (req, res) {
     req.body.ward,
   ];
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -36,7 +38,7 @@ router.get("/:id/prescription", verifyToken, function (req, res) {
   var query = "call sp_view_prescription(?)";
   var params = req.params.id;
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -51,7 +53,7 @@ router.post("/:id/api/update", verifyToken, function (req, res) {
     req.body.gender,
   ];
   connection.query(query, params, function (err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });

@@ -23,7 +23,7 @@ router.get('/:id', function(req,res) {
   var query = "call sp_get_appt(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -32,7 +32,7 @@ router.get('/pt/:id', function(req,res) {
   var query = "call sp_patient_appt(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -41,7 +41,7 @@ router.get('/sched/:id', function(req,res) {
   var query = "call sp_schedule_appt(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -50,7 +50,7 @@ router.get('/time/:id', function(req, res) {
   var query = "select * from appt_hour where time_id = ?";
   if (req.params.id == 0) query = "select * from appt_hour";
   connection.query(query, req.params.id, function(err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
@@ -60,7 +60,7 @@ router.post('/api/create', verifyToken, function(req, res) {
   var appt_params = [req.body.pt_id, req.body.doc_id, req.body.sched_id, req.body.hour_id];
   connection.query(appt_query, appt_params, function(err, result) {
     if (err) {
-      throw err;
+      return res.send(err);
       return;
     }
     console.log(result);
@@ -78,7 +78,7 @@ router.post('/api/create', verifyToken, function(req, res) {
     var doc_query = 'call sp_appt_info(?)';
     connection.query(doc_query, appt_id, async function(err, result) {
       if(err) {
-        throw err;
+        return res.send(err);
         return;
       }
       biz_name = result[0][0].business_name;
@@ -115,13 +115,13 @@ router.post('/api/create', verifyToken, function(req, res) {
           var update_query = "update doctor_appointment set meeting_url = ? where id = ?";
           var update_params = [meeting_url, appt_id];
           connection.query(update_query, update_params, function(err, result) {
-            if(err) throw err;
+            if(err) return res.send(err);
           });
 
           var pt_email;
           var pt_query = 'call sp_patient_email(?)';
           connection.query(pt_query, req.body.pt_id, function(err, result) {
-            if (err) throw err;
+            if (err) return res.send(err);
             pt_email = result[0][0].email;
 
             var mailOptions = { 
@@ -154,18 +154,18 @@ router.post("/api/delete/:appt_id", verifyToken, function(req, res) {
   var query = 'call sp_cancel_appointment(?)';
   var params = req.params.appt_id;
   connection.query(query, params, function(err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
 
     var pt_id = result[0][0].pt_id;
     var sched_id = result[0][0].sched_id;
     var pt_query = "call sp_patient_email(?)";
     connection.query(pt_query, pt_id, function(err, pt_result) {
-      if (err) throw err;
+      if (err) return res.send(err);
       
       var pt_email = pt_result[0][0].user_email;
       var appt_query = "call sp_appt_info(?)";
       connection.query(appt_query, sched_id, function(err, appt_result) {
-        if (err) throw err;
+        if (err) return res.send(err);
 
         var biz_name = appt_result[0][0]?.business_name;
         var biz_email = appt_result[0][0]?.email;
@@ -199,7 +199,7 @@ router.post("/:id/diagnose", verifyToken, function(req, res) {
   var query =  "call sp_diagnose(?, ?, ?, ?)";
   var params = [req.params.id, req.body.appt, req.body.pres, req.body.diagnosis];
   connection.query(query, params, function(err, result) {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });

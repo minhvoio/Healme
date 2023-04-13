@@ -14,7 +14,7 @@ router.get("/search", verifyToken, (req, res) => {
   console.log(req.body.search_text);
   // res.send(req.body.search_text);
   connection.query(query, req.body.search_text, (err, result) => {
-    if (err) throw err;
+    if (err) return res.send(err);
     res.send(result);
   });
 });
