@@ -19,8 +19,17 @@ async function createMeeting(email) {
   
 };
 
+router.get('/:id', function(req,res) {
+  var query = "call sp_get_appt(?)";
+  var params = req.params.id;
+  connection.query(query, params, function(err, result) {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
 router.get('/pt/:id', function(req,res) {
-  var query = "select * from doctor_appointment where pt_id = ?";
+  var query = "call sp_patient_appt(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
     if (err) throw err;
@@ -29,7 +38,7 @@ router.get('/pt/:id', function(req,res) {
 });
 
 router.get('/sched/:id', function(req,res) {
-  var query = "select * from doctor_appointment where sched_id = ?";
+  var query = "call sp_schedule_appt(?)";
   var params = req.params.id;
   connection.query(query, params, function(err, result) {
     if (err) throw err;
