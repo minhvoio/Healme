@@ -31,7 +31,7 @@ router.post('/api/update/:id', verifyToken, function(req, res) {
 });
 
 router.post('/api/delete/:id', verifyToken, function(req, res) {
-    var query = "call sp_delete_schedule(?,?)";
+    var query = "call sp_delete_schedule(?)";
     var params = req.params.id;
     connection.query(query, params, function(err, result) {
         if (err) throw err;
