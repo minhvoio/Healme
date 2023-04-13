@@ -949,7 +949,7 @@ begin
 			rollback;
 		end;
 	start transaction;
-		if (select 1 = 1 from work_schedule where sched_id = p_sched_id and time_id = p_time_id and status = 1) then
+		if (select 1 = 1 from work_schedule where id = p_sched_id and time_id = p_time_id and status = 1) then
 			signal sqlstate '45022'
             set message_text = 'Schedule already registered';
 		end if;
@@ -1076,6 +1076,28 @@ begin
 			left join doctor_appointment appt on appt.sched_id = sched.id and appt.hour_id = ah.id
 		where sched.id = p_sched_id
 		order by workday desc, ah.id asc;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_get_appt` //
+create procedure `sp_get_appt` (in p_appt_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		SELECT appt.id, appt.pt_id, pt.fullname patient, appt.doc_id, biz.business_name, 
+			sched.workday, ah.details, appt.meeting_url
+		from doctor_appointment appt
+			left join patient pt on pt.id = appt.pt_id
+            left join business biz on biz.id = appt.doc_id
+			left join work_schedule sched on appt.sched_id = sched.id
+			left join appt_hour ah on appt.hour_id = ah.id 
+		where appt.id = p_appt_id;
 	commit;
 end //
 
