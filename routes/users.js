@@ -114,29 +114,31 @@ router.post("/api/login", loginValidation, (req, res) => {
       var roleQuery = "SELECT * FROM roles WHERE id = ?";
       var roleParams = result[0].role_id;
       connection.query(roleQuery, roleParams, (roleErr, roleRes) => {
-          if (roleErr) return res.send(roleErr);
-          const roleTitle = roleRes[0].title;
-          result[0].role = roleTitle;
-          const token = jwt.sign (
-            { id: result[0].id },
-            "the-super-strong-secret",
-            { expiresIn: "120d" }
-          );
+        if (roleErr) return res.send(roleErr);
+        const roleTitle = roleRes[0].title;
+        result[0].role = roleTitle;
+        const token = jwt.sign(
+          { id: result[0].id },
+          "the-super-strong-secret",
+          { expiresIn: "120d" }
+        );
 
-          var userRoleQuery = "call sp_get_user_role_id(?, ?)";
-          var userRoleParams = [result[0].id, result[0].role_id];
-          connection.query(userRoleQuery, userRoleParams, function(userRoleErr, userRoleResult) {
-            if (userRoleErr) return res.send(userRoleErr)
-            result[0].user_role_id =  userRoleResult[0][0]?.user_role_id
+        var userRoleQuery = "call sp_get_user_role_id(?, ?)";
+        var userRoleParams = [result[0].id, result[0].role_id];
+        connection.query(
+          userRoleQuery,
+          userRoleParams,
+          function (userRoleErr, userRoleResult) {
+            if (userRoleErr) return res.send(userRoleErr);
+            result[0].user_role_id = userRoleResult[0][0]?.user_role_id;
 
             var updateQuery = `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`;
-            connection.query(updateQuery ,(updateErr, updateRes) => {
-                if (updateErr) return res.send(updateErr);
-                return res.status(200).send({
-                  msg: "Logged in!",
-                  token,
-                  user: result[0],
-                });
+            connection.query(updateQuery, (updateErr, updateRes) => {
+              if (updateErr) return res.send(updateErr);
+              return res.status(200).send({
+                msg: "Logged in!",
+                token,
+                user: result[0],
               });
             });
           }
@@ -145,7 +147,6 @@ router.post("/api/login", loginValidation, (req, res) => {
     });
   });
 });
-
 //signupValidation
 router.post("/api/get-user", (req, res, next) => {
   if (
