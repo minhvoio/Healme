@@ -97,13 +97,6 @@ router.post('/api/create', verifyToken, function(req, res) {
             participant_video: "true",
           },
         },
-        auth: {
-          bearer: token,
-        },
-        headers: {
-          "User-Agent": "Zoom-api-Jwt-Request",
-          "content-type": "application/json",
-        },
         json: true, //Parse the JSON string in the response
       };
     
