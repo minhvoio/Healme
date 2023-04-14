@@ -13,9 +13,9 @@ router.get('/:pres_id', verifyToken, function(req, res, next) {
   });
 });
 
-router.get('/appt/:id', verifyToken, function(req, res, next) {
+router.get('/appt/:appt_id', verifyToken, function(req, res, next) {
   var query = "call sp_prescription_by_appt(?)";
-  var params = req.params.pres_id
+  var params = [req.params.appt_id];
   connection.query(query, params, function (err, result, fields) {
       if (err) return res.send(err);
       console.log(result);
