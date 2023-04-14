@@ -4,7 +4,7 @@ const requestPromise = require("request-promise");
 const jwt = require("jsonwebtoken");
 const connection = require("../models/dbconfig");
 const transporter = require("../models/mailer");
-const app_email = "lenamthaisonts@gmail.com";
+const app_email = "healme.vn@gmail.com";
 const { route } = require(".");
 const verifyToken = require("../middlewares/verifyToken");
 require("dotenv").config();
