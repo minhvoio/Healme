@@ -1104,4 +1104,23 @@ begin
 	commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_prescription_by_appt` //
+create procedure `sp_prescription_by_appt` (in p_appt_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select pres.id pres_id, biz.business_name, hist.diagnosis, pres.created_date
+        from patient_history hist
+			left join prescription pres on pres.id = hist.pres_id
+            left join business biz on pres.doc_id = biz.id
+        where hist.appt_id = p_appt_id;
+	commit;
+end //
+
 delimiter ;
