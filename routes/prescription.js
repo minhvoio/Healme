@@ -13,9 +13,19 @@ router.get('/:pres_id', verifyToken, function(req, res, next) {
   });
 });
 
+router.get('/appt/:id', verifyToken, function(req, res, next) {
+  var query = "call sp_prescription_by_appt(?)";
+  var params = req.params.pres_id
+  connection.query(query, params, function (err, result, fields) {
+      if (err) return res.send(err);
+      console.log(result);
+      res.send(result);
+  });
+});
+
 router.post('/api/create', verifyToken, function(req, res, next) {
-  var query = "call sp_prescribe(?, ?)";
-  var params = [req.body.pt_id, req.body.doc_id];
+  var query = "call sp_prescribe(?, ?, ?, ?)";
+  var params = [req.body.pt_id, req.body.doc_id, req.body.appt_id, req.body.diagnosis];
   connection.query(query, params, function (err, result, fields) {
       if (err) return res.send(err);
       console.log(result);
