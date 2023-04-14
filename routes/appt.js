@@ -93,6 +93,7 @@ router.post("/api/create", verifyToken, function (req, res) {
           settings: {
             host_video: "true",
             participant_video: "true",
+            join_before_host: "true"
           },
         },
         auth: {
