@@ -34,8 +34,8 @@ router.post('/api/create', verifyToken, function(req, res, next) {
 });
 
 router.post('/:pres_id/api/add', verifyToken, function(req, res, next) {
-  var query = "call sp_add_prescription_details(?, ?, ?)";
-  var params = [req.params.pres_id, req.body.med_id, req.body.note];
+  var query = "call sp_add_prescription_details(?, ?, ?, ?)";
+  var params = [req.params.pres_id, req.body.med_id, req.body.note, req.body.dosage];
   connection.query(query, params, function (err, result, fields) {
       if (err) return res.send(err);
       console.log(result);
@@ -52,8 +52,8 @@ router.post('/:pres_id/api/update', function(req,res) {
     var pres_details = req.body.details;
     if (pres_details) {
       pres_details?.forEach(element => {
-        var add_query = 'call sp_add_prescription_details(?, ?, ?)';
-        var add_params = [req.params.pres_id, element.med_id, element.note];
+        var add_query = 'call sp_add_prescription_details(?, ?, ?, ?)';
+        var add_params = [req.params.pres_id, element.med_id, element.note, element.dosage];
         connection.query(add_query, add_params, function(addErr, addResult) {
           if (addErr) res.send(addErr);
           console.log(addResult[0][0]);
@@ -66,8 +66,8 @@ router.post('/:pres_id/api/update', function(req,res) {
 });
 
 router.post('/api/update/:pd_id', verifyToken, function(req, res, next) {
-  var query = "call sp_update_prescription_details(?, ?, ?)";
-  var params = [req.params.pd_id, req.body.med_id, req.body.note];
+  var query = "call sp_update_prescription_details(?, ?, ?, ?)";
+  var params = [req.params.pd_id, req.body.med_id, req.body.note, req.body.dosage];
   connection.query(query, params, function (err, result, fields) {
       if (err) return res.send(err);
       res.send(result);
