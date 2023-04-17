@@ -9,7 +9,7 @@ router.get("/", (req, res) => {
   res.send("Medicine page");
 });
 
-router.get("/search", verifyToken, (req, res) => {
+router.post("/search", verifyToken, (req, res) => {
   var query = "call sp_search_medicine(ifnull(?, ''))";
   console.log(req.body.search_text);
   // res.send(req.body.search_text);
