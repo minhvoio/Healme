@@ -48,18 +48,20 @@ router.post('/:pres_id/api/update', function(req,res) {
   connection.query(clear_query, req.params.pres_id, function(clearErr, clearResult) {
     if (clearErr) return res.send(clearErr);
     console.log(clearResult);
-    var pd_id;
+    var pd_id = [];
     var pres_details = req.body.details;
-    console.log(pres_details[0].note);
-    pres_details.forEach(element => {
-      var add_query = 'call sp_add_prescription_details(?, ?, ?)';
-      var add_params = [req.params.pres_id, element.med_id, element.note];
-      connection.query(add_query, add_params, function(addErr, addResult) {
-        if (addErr) res.send(addErr);
-        console.log(addResult[0][0]);
+    if (pres_details) {
+      pres_details?.forEach(element => {
+        var add_query = 'call sp_add_prescription_details(?, ?, ?)';
+        var add_params = [req.params.pres_id, element.med_id, element.note];
+        connection.query(add_query, add_params, function(addErr, addResult) {
+          if (addErr) res.send(addErr);
+          console.log(addResult[0][0]);
+        });
       });
-    });
-    res.send("Success");
+      res.send("Success");
+    }
+    else res.send("No Data");
   });
 });
 
