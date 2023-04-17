@@ -9,11 +9,11 @@ router.get("/", (req, res) => {
   res.send("Medicine page");
 });
 
-router.get("/search", verifyToken, (req, res) => {
+router.get("/search/:searchText", verifyToken, (req, res) => {
   var query = "call sp_search_medicine(?)";
-  console.log(req.body.search_text);
+  console.log(req.params.searchText);
   // res.send(req.body.search_text);
-  connection.query(query, req.body.search_text, (err, result) => {
+  connection.query(query, req.params.searchText, (err, result) => {
     if (err) return res.send(err);
     res.send(result);
   });
