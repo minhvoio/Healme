@@ -10,7 +10,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/search", verifyToken, (req, res) => {
-  var query = "call sp_search_medicine(?)";
+  var query = "call sp_search_medicine(ifnull(?, ''))";
   console.log(req.body.search_text);
   // res.send(req.body.search_text);
   connection.query(query, req.body.search_text, (err, result) => {
