@@ -13,7 +13,7 @@ router.post("/search", verifyToken, (req, res) => {
   var query = "call sp_search_medicine(ifnull(?, ''))";
   console.log(req.body.search_text);
   // res.send(req.body.search_text);
-  connection.query(query, req.body.search_text, (err, result) => {
+  connection.query(query, req.params.searchText, (err, result) => {
     if (err) return res.send(err);
     res.send(result);
   });
