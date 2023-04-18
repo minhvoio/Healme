@@ -65,6 +65,15 @@ router.post('/:pres_id/api/update', function(req,res) {
   });
 });
 
+router.post('/:pres_id/api/update/diagnosis', verifyToken, function(req, res) {
+  var query = "call sp_update_diagnosis(?, ?)";
+  var params = [req.params.pres_id, req.body.diagnosis];
+  connection.query(query, params, function(err, result) {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+});
+
 router.post('/api/update/:pd_id', verifyToken, function(req, res, next) {
   var query = "call sp_update_prescription_details(?, ?, ?, ?)";
   var params = [req.params.pd_id, req.body.med_id, req.body.note, req.body.dosage];
