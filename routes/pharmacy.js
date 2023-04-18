@@ -33,7 +33,7 @@ router.get('/:pharmacyID/branch', function(req, res, next) {
 
 router.post('/search', function(req, res) {
   var query = "call sp_filter_pharmacies(nullif(?, 0), nullif(?, 0), nullif(?, 0))";
-  var params = [req.body.ward, req.body.district, req.body.proviince];
+  var params = [req.body.ward, req.body.district, req.body.province];
   connection.query(query, params, function (err, result) {
     if (err) return res.send(err);
     res.send(result);
