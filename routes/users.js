@@ -131,6 +131,7 @@ router.post("/api/login", loginValidation, (req, res) => {
           function (userRoleErr, userRoleResult) {
             if (userRoleErr) return res.send(userRoleErr);
             result[0].user_role_id = userRoleResult[0][0]?.user_role_id;
+            result[0].business_type = userRoleResult[0][0]?.business_type;
 
             var updateQuery = `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`;
             connection.query(updateQuery, (updateErr, updateRes) => {
