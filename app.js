@@ -11,6 +11,7 @@ var usersRouter = require("./routes/users");
 var patientRouter = require("./routes/patient");
 var clinicRouter = require("./routes/clinic");
 var pharmacyRouter = require("./routes/pharmacy");
+var businessRouter = require("./routes/business");
 
 var areaRouter = require("./routes/area");
 var apptRouter = require("./routes/appt");
@@ -52,6 +53,7 @@ app.use("/prescription", prescriptionRouter);
 app.use("/search", searchRouter);
 app.use("/map", mapRouter);
 app.use("/chatbot", chatbotRouter);
+app.use("/business", businessRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
