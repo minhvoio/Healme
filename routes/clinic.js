@@ -42,13 +42,4 @@ router.post("/search", function (req, res) {
   });
 });
 
-router.post("/:biz_id/update-description", function(req, res) {
-  var query = "call sp_update_description(?, ?)";
-  var params = [req.params.biz_id, req.body.descr];
-  connection.query(query, params, function(err, result) {
-    if (err) return res.send(err);
-    res.send(result);
-  });
-});
-
 module.exports = router;

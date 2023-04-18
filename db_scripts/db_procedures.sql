@@ -1155,8 +1155,8 @@ begin
 end //
 
 delimiter //
-drop procedure if exists `sp_update_description` //
-create procedure `sp_update_description` (in p_biz_id bigint unsigned, p_descr text)
+drop procedure if exists `sp_update_business` //
+create procedure `sp_update_business` (in p_biz_id bigint unsigned, p_business_name varchar(255), p_descr text, p_branch_of bigint unsigned)
 begin
 	declare exit handler for sqlexception
 		begin
@@ -1165,8 +1165,20 @@ begin
 			rollback;
 		end;
 	start transaction;
-		update business set descr = p_descr where id = p_biz_id;
-        select 'Success' message;
+		if p_business_name is not null then
+			update business set business_name = p_business_name where id = p_biz_id;
+			select 'Success' message;
+		end if;
+        
+		if p_descr is not null then
+			update business set descr = p_descr where id = p_biz_id;
+			select 'Success' message;
+		end if;
+        
+        if p_branch_of is not null then
+			update business set branch_od = p_branch_of where id = p_biz_id;
+			select 'Success' message;
+		end if;
 	commit;
 end //
 
@@ -1187,6 +1199,36 @@ begin
             left join users usr on biz.rep_user_id = usr.id
         where biz.id = p_biz_id and type_id = 2;
 	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_create_business_profile` //
+create procedure `sp_create_business_profile` (in p_user_id bigint unsigned, in p_business_name varchar(255), in p_type_id tinyint unsigned,
+	p_descr text, p_address text, p_ward_id bigint unsigned, p_branch_of_id bigint unsigned)
+begin
+	declare v_ward varchar(255);
+	declare v_district varchar(255);
+    declare v_province varchar(255);
+    declare v_district_id bigint unsigned;
+    declare v_province_id bigint unsigned;
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		if (select 1 = 1 from business where rep_user_id = p_user_id) then
+			signal sqlstate '45012'
+			set message_text = 'User already had profile'; 
+		end if;
+		select title, district_id into v_ward, v_district_id from ward where id = p_ward_id;
+		select title, province_id into v_district, v_province_id from district where id = v_district_id;
+		select name into v_province from province where id = v_province_id;
+		insert into address values(null, concat_ws(', ', p_address, v_ward, v_district, v_province), p_ward_id, now());
+		insert into business values(null, p_business_name, p_user_id, p_type_id, p_descr, last_insert_id(), p_branch_of_id, now());
+		select 'Profile created successfully' message, last_insert_id() biz_id;
+    commit;
 end //
 
 delimiter ;

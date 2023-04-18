@@ -21,15 +21,13 @@ router.post("/api/create", function (req, res) {
   bcrypt.hash(password, 10, function (err, hash) {
     if (err) return res.send(err);
 
-    var query = "call sp_create_user(?, ?, ?, ?, ?, ?, ?)";
+    var query = "call sp_create_user(?, ?, ?, ?, ?)";
     var params = [
       req.body.username,
       hash,
-      req.body.name,
       req.body.role_id,
       req.body.email,
       req.body.phone,
-      req.body.descr
     ];
     connection.query(query, params, function (err, result) {
       if (err) return res.send(err);
