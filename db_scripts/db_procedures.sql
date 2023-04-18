@@ -1154,4 +1154,39 @@ begin
 	commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_update_description` //
+create procedure `sp_update_description` (in p_biz_id bigint unsigned, p_descr text)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		update business set descr = p_descr where id = p_biz_id;
+        select 'Success' message;
+	commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_get_pharmacy` //
+create procedure `sp_get_pharmacy` (in p_biz_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		select biz.id, biz.business_name, biz.type_id, biz.descr, biz.address_id, addr.fulladdress, usr.email, usr.phone
+        from business biz
+			left join address addr on biz.address_id = addr.id
+            left join users usr on biz.rep_user_id = usr.id
+        where biz.id = p_biz_id and type_id = 2;
+	commit;
+end //
+
 delimiter ;

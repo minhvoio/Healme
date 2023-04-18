@@ -13,7 +13,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/:pharmacyID', function(req, res, next) {
-  var query = "select * from business where id = ?";
+  var query = "call sp_get_pharmacy(?);";
   var params = req.params.pharmacyID;
   connection.query(query, params, function (err, result, fields) {
       if (err) return res.send(err);
