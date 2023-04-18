@@ -1138,4 +1138,20 @@ begin
 	commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_update_diagnosis` //
+create procedure `sp_update_diagnosis` (in p_pres_id bigint unsigned, p_diagnosis text)
+begin
+	declare exit handler for sqlexception
+		begin
+			get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+			select concat_ws(': ', @p1, @p2) as error_message;
+			rollback;
+		end;
+	start transaction;
+		update patient_history set diagnosis = p_diagnosis where pres_id = p_pres_id;
+        select 'Success' message, id history_id, appt_id from patient_history where pres_id = p_pres_id;
+	commit;
+end //
+
 delimiter ;
