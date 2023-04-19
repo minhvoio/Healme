@@ -47,7 +47,7 @@ router.get('/district/:districtid/ward', function(req, res) {
 });
 
 router.get('/ward/:wardid', function(req, res) {
-    var query = "select id, title from ward where id = ?";
+    var query = "call sp_get_ward(?);";
     var params = req.params.wardid;
     connection.query(query, params, function(err, result) {
         if(err) return res.send(err);

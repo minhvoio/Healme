@@ -1250,4 +1250,24 @@ begin
     commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_get_ward` //
+create procedure `sp_get_ward` (in p_ward_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		select wrd.id ward_id, wrd.title ward, dist.id district_id, 
+			dist.title district, prvn.id province_id, prvn.name province
+        from ward wrd
+			left join district dist on dist.id = wrd.district_id
+            left join province prvn on prvn.id = dist.province_id
+		where wrd.id = p_ward_id;
+    commit;
+end //
+
 delimiter ;
