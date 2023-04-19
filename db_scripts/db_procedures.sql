@@ -1270,4 +1270,31 @@ begin
     commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_get_user_info` //
+create procedure `sp_get_user_info` (in p_user_id bigint unsigned)
+begin
+	declare v_role_id tinyint unsigned;
+    declare v_user_role_id bigint unsigned;
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		select role_id into v_role_id from users where id = p_user_id;
+        if v_role_id = 2 then
+			select id into v_user_role_id from patient where user_id = p_user_id;
+		elseif v_role_id = 3 then
+			select id into v_user_role_id from business where rep_user_id = p_user_id;
+		else set v_user_role_id = 0;
+        end if;
+		select usr.*, rl.title role_name, v_user_role_id user_role_id 
+        from users usr
+			left join roles rl on rl.id = usr.role_id
+		where usr.id = p_user_id;
+    commit;
+end //
+
 delimiter ;
