@@ -1231,4 +1231,23 @@ begin
     commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_department_by_clinic` //
+create procedure `sp_department_by_clinic` (in p_biz_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		select dd.dept_id, dept.title
+        from doctor_department dd
+			left join department dept on dd.dept_id = dept.id
+		where dd.doc_id = p_biz_id
+        order by dd.dept_id;
+    commit;
+end //
+
 delimiter ;

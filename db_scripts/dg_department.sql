@@ -26,5 +26,5 @@ INSERT INTO department(id, title, created_date) VALUES
 
 set sql_safe_updates = 0;
 update department
-set search_text = replace(replace(lower(title),' ',''),'-','');
+set search_text = replace(lower(title),'-','');
 set sql_safe_updates = 1;

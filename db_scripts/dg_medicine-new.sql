@@ -782,5 +782,5 @@ INSERT INTO medicine(id, title, ingredients, med_type, supplier) VALUES
 
 set sql_safe_updates = 0;
 update medicine
-set search_text = replace(lower(title),' ', '');
+set search_text = replace(lower(title),'-', '');
 set sql_safe_updates = 1;

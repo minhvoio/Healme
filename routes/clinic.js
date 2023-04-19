@@ -16,7 +16,14 @@ router.get("/:id", function(req, res) {
   var query = "call sp_get_clinic(?)";
   connection.query(query, req.params.id, function(err, result) {
     if(err) return res.send(err);
-    res.send(result);
+    var biz_id = result[0][0]?.id;
+    var dept_query = "call sp_department_by_clinic(?);";
+    connection.query(dept_query, biz_id, function(deptErr, deptResult) {
+      if (deptErr) return res.send(deptErr);
+      console.log(deptResult[0]);
+      result[0][0].departments = deptResult[0];
+      res.send(result);
+    });
   });
 });
 
