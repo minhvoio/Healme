@@ -16,6 +16,15 @@ router.get("/", function (req, res) {
   });
 });
 
+router.get("/api/get/:user_id", function(req, res) {
+  var query = "call sp_get_user_info(?)";
+  var params = [req.params.user_id];
+  connection.query(query, params, function(err, result) {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+});
+
 router.post("/api/create", function (req, res) {
   var password = req.body.password;
   bcrypt.hash(password, 10, function (err, hash) {
