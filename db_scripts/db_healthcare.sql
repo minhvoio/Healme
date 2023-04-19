@@ -199,7 +199,7 @@ create table doctor_appointment
     constraint fk_appt_hour foreign key(hour_id) references appt_hour(id)
 );
 
-create table branch_medicine
+create table pharmacy_medicine
 (
 	id bigint unsigned primary key auto_increment,
     pharmacy_id bigint unsigned,
@@ -207,5 +207,15 @@ create table branch_medicine
     stock int,
     price int,
     constraint fk_medicine_pharmacy foreign key(pharmacy_id) references business(id),
-    constraint fk_branch_medicine foreign key(medicine_id) references medicine(id)
+    constraint fk_pharmacy_medicine foreign key(medicine_id) references medicine(id)
 );
+
+create table doctor
+(
+	id bigint unsigned primary key auto_increment,
+    clinic_id bigint unsigned,
+    dept_id bigint unsigned,
+    experience text,
+    constraint fk_doctor_clinic foreign key(clinic_id) references business(id),
+    constraint fk_doctor_department foreign key(dept_id) references department(id)
+)
