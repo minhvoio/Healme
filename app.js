@@ -22,6 +22,7 @@ var searchRouter = require("./routes/search");
 var prescriptionRouter = require("./routes/prescription");
 var mapRouter = require("./routes/map");
 var chatbotRouter = require("./routes/chatbot");
+var callRouter = require("./routes/call");
 
 const { config } = require("process");
 
@@ -29,7 +30,7 @@ var app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "pug");
+app.set("view engine", "ejs");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -54,6 +55,7 @@ app.use("/search", searchRouter);
 app.use("/map", mapRouter);
 app.use("/chatbot", chatbotRouter);
 app.use("/business", businessRouter);
+app.use("/call", callRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
