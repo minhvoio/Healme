@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const connection = require("../models/dbconfig");
 const transporter = require("../models/mailer");
 const app_email = "healme.vn@gmail.com";
+const request = require('request');
 const { route } = require(".");
 const verifyToken = require("../middlewares/verifyToken");
 require("dotenv").config();
@@ -15,7 +16,55 @@ const payload = {
 };
 const token = jwt.sign(payload, process.env.API_SECRET); //your API SECRET HERE
 
-async function createMeeting(email) {}
+router.get("/api/create-meeting/", function(req, res){
+  const ZOOM_AUTH='https://zoom.us/oauth/authorize?response_type=code&client_id=';
+  const clientID = process.env.CLIENT_ID;
+  const clientSecret = process.env.CLIENT_SECRET;
+  const redirectURL = process.env.REDIRECT_URL;
+  const authCode = req.query.code;
+  if(authCode){
+    var options = {
+      method: 'POST',
+      url: 'https://zoom.us/oauth/token',
+      qs: {
+        grant_type: 'authorization_code',
+        code: authCode,
+        redirect_uri: redirectURL,
+      },
+      headers: {
+        Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+      },
+      json: true
+    };
+    request(options, function (error, response, body) {
+        if (error) return error;
+        var accessToken = body.access_token;
+        var meeting_options = {
+            method: 'POST',
+            headers: {
+              authorization: 'Bearer ' + accessToken,
+            },
+            uri: "https://api.zoom.us/v2/users/me/meetings",
+            body: {
+            topic: "Zoom Meeting", //meeting title
+            type: 1,
+            settings: {
+                host_video: "true",
+                participant_video: "true",
+                join_before_host: "true"
+            },
+            },
+            json: true
+        };
+          request(meeting_options, function (error, response, body) {
+            if (error) throw new Error(error);
+            console.log(body);
+            res.send(body.join_url);
+          });
+    });
+  }
+  else res.redirect(ZOOM_AUTH + clientID + '&redirect_uri=' + redirectURL);
+});
 
 router.get("/:id", function (req, res) {
   var query = "call sp_get_appt(?)";
