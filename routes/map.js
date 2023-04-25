@@ -38,7 +38,7 @@ async function getDrivingDistance(origin, destination, apiKey) {
   } else console.log(`Can't find the place`);
 }
 
-router.get("/", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     if (
       !req.headers.authorization ||
