@@ -49,17 +49,19 @@ router.get("/api/create-meeting/", function(req, res){
             topic: "Zoom Meeting", //meeting title
             type: 1,
             settings: {
-                host_video: "true",
-                participant_video: "true",
-                join_before_host: "true"
-            },
+              join_before_host: true,
+              waiting_room: false,
+              mute_upon_entry: false,
+              participant_video: true,
+              host_video: true,
+              },
             },
             json: true
         };
           request(meeting_options, function (error, response, body) {
-            if (error) throw new Error(error);
-            console.log(body);
-            res.send(body.join_url);
+            if (error) return new Error(error);
+            console.log(body.join_url);
+            res.send(body);
           });
     });
   }
