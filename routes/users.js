@@ -4,7 +4,6 @@ const { signupValidation, loginValidation } = require("../models/validation");
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
 var connection = require("../models/dbconfig");
 
 /* GET users listing. */
@@ -16,10 +15,10 @@ router.get("/", function (req, res) {
   });
 });
 
-router.get("/api/get/:user_id", function(req, res) {
+router.get("/api/get/:user_id", function (req, res) {
   var query = "call sp_get_user_info(?)";
   var params = [req.params.user_id];
-  connection.query(query, params, function(err, result) {
+  connection.query(query, params, function (err, result) {
     if (err) return res.send(err);
     res.send(result);
   });
@@ -158,7 +157,8 @@ router.post("/api/login", loginValidation, (req, res) => {
     });
   });
 });
-//signupValidation
+
+//get current user
 router.post("/api/get-user", (req, res, next) => {
   if (
     !req.headers.authorization ||
@@ -172,31 +172,53 @@ router.post("/api/get-user", (req, res, next) => {
   const theToken = req.headers.authorization.split(" ")[1];
   const decoded = jwt.verify(theToken, "the-super-strong-secret");
 
-  connection.query(
-    "SELECT * FROM users where id = ?",
-    decoded.id,
+  const userId = decoded.id; // Get the user ID from the decoded token
 
-    function (error, results, fields) {
-      if (error) return res.send(error);
+  var getUserQuery = "SELECT * FROM users WHERE id = ?";
+  var getUserParams = userId; // Use the user ID in the query parameters
+  connection.query(getUserQuery, getUserParams, function (err, result) {
+    if (err) {
+      return res.status(400).send({
+        msg: err,
+      });
+    }
+    if (!result.length) {
+      return res.status(401).send({
+        msg: "User not found!",
+      });
+    }
 
+    var roleQuery = "SELECT * FROM roles WHERE id = ?";
+    var roleParams = result[0].role_id;
+    connection.query(roleQuery, roleParams, (roleErr, roleRes) => {
+      if (roleErr) return res.send(roleErr);
+      const roleTitle = roleRes[0].title;
+      result[0].role = roleTitle;
+
+      var userRoleQuery = "call sp_get_user_role_id(?, ?)";
+      var userRoleParams = [result[0].id, result[0].role_id];
       connection.query(
-        "SELECT * FROM roles WHERE id = ?",
-        results[0].role_id,
+        userRoleQuery,
+        userRoleParams,
+        function (userRoleErr, userRoleResult) {
+          if (userRoleErr) return res.send(userRoleErr);
+          result[0].user_role_id = userRoleResult[0][0]?.user_role_id;
+          result[0].business_type = userRoleResult[0][0]?.business_type;
+          result[0].fulladdress = userRoleResult[0][0]?.fulladdress;
+          result[0].ward_id = userRoleResult[0][0]?.ward_id;
 
-        (roleErr, roleRes) => {
-          if (roleErr) return res.send(roleErr);
-          const roleTitle = roleRes[0].title;
-          results[0].role = roleTitle;
-
-          return res.send({
-            error: false,
-            data: results[0],
-            message: "Fetch Successfully.",
+          var updateQuery = `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`;
+          connection.query(updateQuery, (updateErr, updateRes) => {
+            if (updateErr) return res.send(updateErr);
+            return res.status(200).send({
+              msg: "User info retrieved!",
+              user: result[0], // Return the user info
+            });
           });
         }
       );
-    }
-  );
+    });
+  });
 });
 
 router.post("/:user_id/api/change-password", function (req, res) {
