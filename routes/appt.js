@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const requestPromise = require("request-promise");
 const jwt = require("jsonwebtoken");
 const connection = require("../models/dbconfig");
 const transporter = require("../models/mailer");
 const app_email = "healme.vn@gmail.com";
 const request = require('request');
-const { route } = require(".");
 const verifyToken = require("../middlewares/verifyToken");
 require("dotenv").config();
 
@@ -17,19 +15,17 @@ const payload = {
 const token = jwt.sign(payload, process.env.API_SECRET); //your API SECRET HERE
 
 router.get("/api/create-meeting/", function(req, res){
-  const ZOOM_AUTH='https://zoom.us/oauth/authorize?response_type=code&client_id=';
   const clientID = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
-  const redirectURL = process.env.REDIRECT_URL;
-  const authCode = req.query.code;
-  if(authCode){
+  const accountID = process.env.ACCOUNT_ID
+  //if(authCode){
     var options = {
       method: 'POST',
       url: 'https://zoom.us/oauth/token',
       qs: {
-        grant_type: 'authorization_code',
-        code: authCode,
-        redirect_uri: redirectURL,
+        grant_type: 'account_credentials',
+        //code: authCode,
+        account_id: accountID,
       },
       headers: {
         Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
@@ -38,13 +34,14 @@ router.get("/api/create-meeting/", function(req, res){
     };
     request(options, function (error, response, body) {
         if (error) return error;
+        console.log(body);
         var accessToken = body.access_token;
         var meeting_options = {
             method: 'POST',
             headers: {
               authorization: 'Bearer ' + accessToken,
             },
-            uri: "https://api.zoom.us/v2/users/me/meetings",
+            uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
             body: {
             topic: "Zoom Meeting", //meeting title
             type: 1,
@@ -64,8 +61,8 @@ router.get("/api/create-meeting/", function(req, res){
             res.send(body);
           });
     });
-  }
-  else res.redirect(ZOOM_AUTH + clientID + '&redirect_uri=' + redirectURL);
+  //}
+  //else res.redirect(ZOOM_AUTH + clientID + '&redirect_uri=' + redirectURL);
 });
 
 router.get("/:id", function (req, res) {
@@ -125,91 +122,109 @@ router.post("/api/create", verifyToken, function (req, res) {
 
     var biz_email, biz_name, appt_day, appt_hour;
     var doc_query = "call sp_appt_info(?)";
-    connection.query(doc_query, appt_id, async function (err, result) {
+    connection.query(doc_query, appt_id, async function (err, infoResult) {
       if (err) {
         return res.send(err);
-        return;
       }
-      biz_name = result[0][0].business_name;
-      biz_email = result[0][0].email;
-      appt_day = result[0][0].workday;
-      appt_hour = result[0][0].appt_hour;
+      biz_name = infoResult[0][0].business_name;
+      biz_email = infoResult[0][0].email;
+      appt_day = infoResult[0][0].workday;
+      appt_hour = infoResult[0][0].appt_hour;
 
-      var options = {
-        method: "POST",
-        uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
-        body: {
-          topic: "Zoom Meeting", //meeting title
-          type: 1,
-          settings: {
-            host_video: "true",
-            participant_video: "true",
-            join_before_host: "true"
-          },
-        },
-        auth: {
-          bearer: token,
-        },
-        headers: {
-          "User-Agent": "Zoom-api-Jwt-Request",
-          "content-type": "application/json",
-        },
-        json: true, //Parse the JSON string in the response
-      };
-
-      requestPromise(options)
-        .then(function (response) {
-          console.log(response.start_url);
-          var meeting_url = response.start_url;
-
-          var update_query =
-            "update doctor_appointment set meeting_url = ? where id = ?";
-          var update_params = [meeting_url, appt_id];
-          connection.query(update_query, update_params, function (err, result) {
-            if (err) return res.send(err);
-          });
-
-          var pt_email;
-          var pt_query = "call sp_patient_email(?)";
-          connection.query(pt_query, req.body.pt_id, function (err, result) {
-            if (err) return res.send(err);
-            pt_email = result[0][0].email;
-
-            var mailOptions = {
-              from: "noreply@domain.com",
-              to: [pt_email, biz_email].join(", "),
-              subject: "Xác nhận đặt lịch thành công",
-              text: "Confirmation Notice",
-              html:
-                "<p>Xác nhận đặt lịch khám thành công</b>" +
-                "<ul><li>Phòng khám: " +
-                biz_name +
-                "</li><li>Email: " +
-                biz_email +
-                "</li><li>Link: " +
-                meeting_url +
-                "</li>" +
-                "<li>Thời gian: " +
-                appt_hour +
-                " Ngày: " +
-                appt_day +
-                "</li></ul>",
+      const clientID = process.env.CLIENT_ID;
+  const clientSecret = process.env.CLIENT_SECRET;
+  const accountID = process.env.ACCOUNT_ID
+  //if(authCode){
+    var options = {
+      method: 'POST',
+      url: 'https://zoom.us/oauth/token',
+      qs: {
+        grant_type: 'account_credentials',
+        account_id: accountID,
+      },
+      headers: {
+        Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+      },
+      json: true
+    };
+    request(options, function (error, response, body) {
+        if (error) return error;
+        var accessToken = body.access_token;
+        var meeting_options = {
+            method: 'POST',
+            headers: {
+              authorization: 'Bearer ' + accessToken,
+            },
+            uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
+            body: {
+            topic: "Zoom Meeting", //meeting title
+            type: 1,
+            settings: {
+              join_before_host: true,
+              waiting_room: false,
+              mute_upon_entry: false,
+              participant_video: true,
+              host_video: true,
+              },
+            },
+            json: true
+        };
+          request(meeting_options, function (error, response, body) {
+            if (error) return new Error(error);
+            console.log(body);
+            result[0][0].meeting = 
+            {
+              start_url: body.start_url,
+              join_url: body.join_url,
+              topic: body.topic,
+              timezone: body.timezone
             };
-            transporter.sendMail(mailOptions, function (err, result) {
-              if (err) {
-                console.log(err);
-              } else {
-                console.log("Message sent: " + result.response);
-              }
+            var meeting_url = body.start_url;
+
+            var update_query =
+              "update doctor_appointment set meeting_url = ? where id = ?";
+            var update_params = [meeting_url, appt_id];
+            connection.query(update_query, update_params, function (err, updateResult) {
+              if (err) return res.send(err);
             });
+            var pt_email;
+            var pt_query = "call sp_patient_email(?)";
+            connection.query(pt_query, req.body.pt_id, function (err, queryResult) {
+              if (err) return res.send(err);
+              pt_email = queryResult[0][0].email;
+
+              var mailOptions = {
+                from: "noreply@domain.com",
+                to: [pt_email, biz_email].join(", "),
+                subject: "Xác nhận đặt lịch thành công",
+                text: "Confirmation Notice",
+                html:
+                  "<p>Xác nhận đặt lịch khám thành công</b>" +
+                  "<ul><li>Phòng khám: " +
+                  biz_name +
+                  "</li><li>Email: " +
+                  biz_email +
+                  "</li><li>Link: " +
+                  meeting_url +
+                  "</li>" +
+                  "<li>Thời gian: " +
+                  appt_hour +
+                  " Ngày: " +
+                  appt_day +
+                  "</li></ul>",
+              };
+              transporter.sendMail(mailOptions, function (mailErr, mailResult) {
+                if (err) {
+                  return mailErr;
+                } else {
+                  console.log('Message Sent: ', mailResult.response);
+                }
+              });
+            });
+            res.send(result);
           });
-        })
-        .catch(function (err) {
-          console.log("API call failed, reason ", err);
-        });
+      });
     });
-    console.log(result);
-    res.send(result);
   });
 });
 
