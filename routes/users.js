@@ -288,7 +288,9 @@ router.post('/api/forgot-password', function (req, res) {
           console.log(error);
         } else {
           console.log(info);
-          res.send('Reset Password Link was sent to your email')
+          res.send({
+            token: token, msg: 'Reset Password Link was sent to your email'
+          })
         }
       });
     }
