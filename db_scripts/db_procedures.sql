@@ -1297,4 +1297,39 @@ begin
     commit;
 end //
 
+delimiter //
+drop procedure if exists `sp_update_certificate` //
+create procedure sp_update_certificate(p_id bigint unsigned, p_url text, p_expration_date datetime)
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		update business_certificate
+        set url = case when p_url is not null then p_url else url end,
+			expiration_date = case when p_expration_date is not null then p_expration_date else expiration_date end
+		where id = p_id and media_type = 3;
+    commit;
+end //
+
+delimiter //
+drop procedure if exists `sp_delete_certificate` //
+create procedure sp_update_certificate(p_id bigint unsigned)
+begin
+	declare exit handler for sqlexception
+    begin
+        get diagnostics condition 1 @p1 = returned_sqlstate, @p2 = message_text;
+        select concat_ws(': ', @p1, @p2) as error_message;
+        rollback;
+	end;
+    start transaction;
+		update business_certificate
+        set status = 0
+		where id = p_id and media_type = 3;
+    commit;
+end //
+
 delimiter ;

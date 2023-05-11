@@ -141,3 +141,4 @@ dist
 
 yarn.lock
 package-lock.json
+*.png
