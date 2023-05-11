@@ -5,6 +5,8 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 var connection = require("../models/dbconfig");
+require('dotenv').config();
+const nodemailer = require('nodemailer');
 
 /* GET users listing. */
 router.get("/", function (req, res) {
@@ -255,5 +257,60 @@ router.post("/api/delete/:userid", function (req, res) {
     res.send(result);
   });
 });
+
+router.post('/api/forgot-password', function (req, res) {
+  const email = req.body.email;
+  const query = "SELECT * FROM users WHERE email = ? AND account_status = 1;";
+  connection.query(query, email, function (err, result) {
+    if (err) return res.send(err);
+    if (result[0]) {
+      const payload = {
+        iss: process.env.API_KEY, //your API KEY
+        exp: new Date().getTime() + 5000,
+      };
+      const token = jwt.sign(payload, process.env.API_SECRET);
+      const mail = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+          user: 'healme.vn',
+          pass: 'dyqmfrwlwmfavqwz'
+        }
+      });
+      const mailOptions = {
+        from: "healme.vn@gmail.com",
+        to: email,
+        subject: "Reset Password Link - healme.vn@gmail.com",
+        html:
+          `<p>You requested for reset password, kindly use this <a href="http://localhost:3001/reset-password/${result[0].id}/${token}">link</a> to reset your password</p>`,
+      };
+      mail.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log(info);
+          res.send({
+            token: token, msg: 'Reset Password Link was sent to your email'
+          })
+        }
+      });
+    }
+  })
+})
+
+router.post('/api/reset-password/:userId/:token', function (req, res) {
+  const new_pass = req.body.new_pass;
+  const userId = req.body.userId;
+  bcrypt.hash(new_pass, 10, function (err, hash) {
+    if (err) return res.send(err);
+    const query = `UPDATE users SET pass = ? WHERE id = '${userId}'`;
+    connection.query(query, hash, function (err, result) {
+      if (err) return res.send(err);
+      res.send({
+        result,
+        msg: 'Reset Password Successfully',
+      });
+    });
+  });
+})
 
 module.exports = router;

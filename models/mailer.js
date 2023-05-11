@@ -1,4 +1,4 @@
-var nodemailer =  require('nodemailer'); 
+var nodemailer = require('nodemailer');
 
 var importer = nodemailer.createTransport({ // config mail server
     service: 'Gmail',
