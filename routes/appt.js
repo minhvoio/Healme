@@ -18,51 +18,48 @@ router.get("/api/create-meeting/", function(req, res){
   const clientID = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
   const accountID = process.env.ACCOUNT_ID
-  //if(authCode){
-    var options = {
-      method: 'POST',
-      url: 'https://zoom.us/oauth/token',
-      qs: {
-        grant_type: 'account_credentials',
-        //code: authCode,
-        account_id: accountID,
-      },
-      headers: {
-        Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
-      },
-      json: true
-    };
-    request(options, function (error, response, body) {
-        if (error) return error;
-        console.log(body);
-        var accessToken = body.access_token;
-        var meeting_options = {
-            method: 'POST',
-            headers: {
-              authorization: 'Bearer ' + accessToken,
-            },
-            uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
-            body: {
-            topic: "Zoom Meeting", //meeting title
-            type: 1,
-            settings: {
-              join_before_host: true,
-              waiting_room: false,
-              mute_upon_entry: false,
-              participant_video: true,
-              host_video: true,
-              },
-            },
-            json: true
-        };
-          request(meeting_options, function (error, response, body) {
-            if (error) return new Error(error);
-            console.log(body.join_url);
-            res.send(body);
-          });
-    });
-  //}
-  //else res.redirect(ZOOM_AUTH + clientID + '&redirect_uri=' + redirectURL);
+  var options = {
+    method: 'POST',
+    url: 'https://zoom.us/oauth/token',
+    qs: {
+      grant_type: 'account_credentials',
+      account_id: accountID,
+    },
+    headers: {
+      Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+    },
+    json: true
+  };
+  request(options, function (error, response, body) {
+    if (error) return error;
+      console.log(body);
+      var accessToken = body.access_token;
+      var meeting_options = {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer ' + accessToken,
+        },
+        uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
+        body: {
+          topic: "Zoom Meeting", //meeting title
+          type: 1,
+          settings: {
+            join_before_host: true,
+            waiting_room: false,
+            mute_upon_entry: false,
+            participant_video: true,
+            host_video: true,
+          },
+        },
+        json: true
+      };
+
+      request(meeting_options, function (error, response, body) {
+        if (error) return new Error(error);
+        console.log(body.join_url);
+        res.send(body);
+      });
+  });
 });
 
 router.get("/:id", function (req, res) {
@@ -110,53 +107,51 @@ router.post("/api/create", verifyToken, function (req, res) {
     req.body.hour_id,
   ];
   connection.query(appt_query, appt_params, function (err, result) {
-    if (err) {
-      return res.send(err);
-    }
+    if (err) return res.send(err);
 
-    if (result[0][0]?.error_message != null) {
-      return res.send(result);
-    }
+    if (result[0][0]?.error_message != null) return res.send(result);
 
     var appt_id = result[0][0]?.id;
 
     var biz_email, biz_name, appt_day, appt_hour;
+
     var doc_query = "call sp_appt_info(?)";
     connection.query(doc_query, appt_id, async function (err, infoResult) {
-      if (err) {
-        return res.send(err);
-      }
+      if (err) return res.send(err);
+
       biz_name = infoResult[0][0].business_name;
       biz_email = infoResult[0][0].email;
       appt_day = infoResult[0][0].workday;
       appt_hour = infoResult[0][0].appt_hour;
 
       const clientID = process.env.CLIENT_ID;
-  const clientSecret = process.env.CLIENT_SECRET;
-  const accountID = process.env.ACCOUNT_ID
-  //if(authCode){
-    var options = {
-      method: 'POST',
-      url: 'https://zoom.us/oauth/token',
-      qs: {
-        grant_type: 'account_credentials',
-        account_id: accountID,
-      },
-      headers: {
-        Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
-      },
-      json: true
-    };
-    request(options, function (error, response, body) {
-        if (error) return error;
+      const clientSecret = process.env.CLIENT_SECRET;
+      const accountID = process.env.ACCOUNT_ID
+
+      var options = {
+        method: 'POST',
+        url: 'https://zoom.us/oauth/token',
+        qs: {
+          grant_type: 'account_credentials',
+          account_id: accountID,
+        },
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+        },
+        json: true
+      };
+      request(options, function (error, response, body) {
+        if (error) return res.send(error);
+
         var accessToken = body.access_token;
+
         var meeting_options = {
-            method: 'POST',
-            headers: {
-              authorization: 'Bearer ' + accessToken,
-            },
-            uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
-            body: {
+          method: 'POST',
+          headers: {
+            authorization: 'Bearer ' + accessToken,
+          },
+          uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
+          body: {
             topic: "Zoom Meeting", //meeting title
             type: 1,
             settings: {
@@ -165,64 +160,55 @@ router.post("/api/create", verifyToken, function (req, res) {
               mute_upon_entry: false,
               participant_video: true,
               host_video: true,
-              },
             },
-            json: true
+          },
+          json: true
         };
-          request(meeting_options, function (error, response, body) {
-            if (error) return new Error(error);
-            console.log(body);
-            result[0][0].meeting = 
-            {
-              start_url: body.start_url,
-              join_url: body.join_url,
-              topic: body.topic,
-              timezone: body.timezone
-            };
-            var meeting_url = body.start_url;
+        request(meeting_options, function (error, response, body) {
+          if (error) return res.send(error);
+          
+          result[0][0].meeting = {
+            start_url: body.start_url,
+            join_url: body.join_url,
+            topic: body.topic,
+            timezone: body.timezone
+          };
+          var meeting_url = body.start_url;
 
-            var update_query =
-              "update doctor_appointment set meeting_url = ? where id = ?";
-            var update_params = [meeting_url, appt_id];
-            connection.query(update_query, update_params, function (err, updateResult) {
-              if (err) return res.send(err);
-            });
-            var pt_email;
-            var pt_query = "call sp_patient_email(?)";
-            connection.query(pt_query, req.body.pt_id, function (err, queryResult) {
-              if (err) return res.send(err);
-              pt_email = queryResult[0][0].email;
+          var update_query = "update doctor_appointment set meeting_url = ? where id = ?";
+          var update_params = [meeting_url, appt_id];
+          connection.query(update_query, update_params, function (err, updateResult) {
+            if (err) return res.send(err);
+          });
 
-              var mailOptions = {
-                from: "noreply@domain.com",
-                to: [pt_email, biz_email].join(", "),
-                subject: "Xác nhận đặt lịch thành công",
-                text: "Confirmation Notice",
+          var pt_email;
+          var pt_query = "call sp_patient_email(?)";
+          connection.query(pt_query, req.body.pt_id, function (err, queryResult) {
+            if (err) return res.send(err);
+            pt_email = queryResult[0][0].email;
+
+            var mailOptions = {
+              from: "noreply@domain.com",
+              to: [app_email, pt_email, biz_email].join(", "),
+              subject: "Xác nhận đặt lịch thành công",
+              text: "Confirmation Notice",
                 html:
                   "<p>Xác nhận đặt lịch khám thành công</b>" +
-                  "<ul><li>Phòng khám: " +
-                  biz_name +
-                  "</li><li>Email: " +
-                  biz_email +
-                  "</li><li>Link: " +
-                  meeting_url +
+                  "<ul><li>Phòng khám: " + biz_name +
+                  "</li><li>Email: " + biz_email +
+                  "</li><li>Link: " + meeting_url +
                   "</li>" +
-                  "<li>Thời gian: " +
-                  appt_hour +
-                  " Ngày: " +
-                  appt_day +
+                  "<li>Thời gian: " + appt_hour + " Ngày: " + appt_day +
                   "</li></ul>",
-              };
-              transporter.sendMail(mailOptions, function (mailErr, mailResult) {
-                if (err) {
-                  return mailErr;
-                } else {
-                  console.log('Message Sent: ', mailResult.response);
-                }
-              });
+            };
+            transporter.sendMail(mailOptions, function (mailErr, mailResult) {
+              if (err) return mailErr;
+              else console.log('Message Sent: ', mailResult.response);
             });
-            res.send(result);
           });
+
+          res.send(result);
+        });
       });
     });
   });
@@ -233,14 +219,12 @@ router.post("/api/delete/:appt_id", verifyToken, function (req, res) {
   var params = req.params.appt_id;
   connection.query(query, params, function (err, result) {
     if (err) return res.send(err);
-
-    var pt_id = result[0][0].pt_id;
-    var sched_id = result[0][0].sched_id;
+    var pt_id = result[0][0]?.pt_id ? result[0][0].pt_id : 0;
+    var sched_id = result[0][0]?.sched_id;
     var pt_query = "call sp_patient_email(?)";
-    connection.query(pt_query, pt_id, function (err, pt_result) {
-      if (err) return res.send(err);
-
-      var pt_email = pt_result[0][0].user_email;
+    connection.query(pt_query, pt_id, function (pt_err, pt_result) {
+      if (pt_err) return res.send(pt_err);
+      var pt_email = pt_result[0][0]?.user_email;
       var appt_query = "call sp_appt_info(?)";
       connection.query(appt_query, sched_id, function (err, appt_result) {
         if (err) return res.send(err);
@@ -268,16 +252,13 @@ router.post("/api/delete/:appt_id", verifyToken, function (req, res) {
             "</li></ul>",
         };
         transporter.sendMail(mailOptions, function (err, result) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log("Message sent: " + result.response);
-          }
+          if (err) return res.send(err);
+          console.log("Message sent: " + result.response);
         });
+
+        res.send(result);
       });
     });
-
-    res.send("Success");
   });
 });
 

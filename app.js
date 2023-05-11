@@ -23,6 +23,8 @@ var prescriptionRouter = require("./routes/prescription");
 var mapRouter = require("./routes/map");
 var chatbotRouter = require("./routes/chatbot");
 
+var mediaRouter = require("./routes/media");
+
 const { config } = require("process");
 
 var app = express();
@@ -54,6 +56,8 @@ app.use("/search", searchRouter);
 app.use("/map", mapRouter);
 app.use("/chatbot", chatbotRouter);
 app.use("/business", businessRouter);
+
+app.use("/media", mediaRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
