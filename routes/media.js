@@ -39,7 +39,7 @@ router.post('/upload/certificate', upload.single('image'), function(req, res) {
   if (!req.file) return res.send('No file was uploaded');
 
   console.log(req.file.filename)
-  var image_url = 'http://localhost:3000/images/' + req.file.filename;
+  var image_url = 'https://healme.azurewebsites.net/images/' + req.file.filename;
   var query = "call sp_add_media(?, ?, ?, ?)";
   var params = [req.body?.business_id, image_url, 3, req.body?.expiration_date];
   connection.query(query, params, (err, result) => {
