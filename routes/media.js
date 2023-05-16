@@ -23,84 +23,81 @@ router.get('/', function(req, res){
 router.post('/upload/photo', uploadStrategy, function(req, res) {
   if (!req.file) return res.send('No file was uploaded');
 
-  console.log(req.file.filename)
-  var imageSrc = imageUrl;
-
+  console.log(req.file.filename);
+  
   const blobName = getBlobName(req.file.originalname);
-  imageSrc += blobName
+  const imageSrc = imageUrl + blobName;
   const blobService = new BlockBlobClient(process.env.AZURE_STORAGE_CONNECTION_STRING, containerName, blobName);
   const stream = getStream(req.file.buffer);
   const streamLength = req.file.buffer.length;
 
   blobService.uploadStream(stream, streamLength)
     .then(() => {
-          res.render('success', { 
-              message: 'File uploaded to Azure Blob storage.' 
-          });
-        })
-    .catch((err) => { if (err) return res.send(err); })
+      console.log('File uploaded to Azure Blob storage:', blobName);
+    })
+    .catch((err) => { 
+      if (err) return res.send(err); 
+    });
 
   var query = "call sp_add_media(?, ?, ?, null)";
   var params = [req.body?.business_id, imageSrc, 2];
   connection.query(query, params, (err, result) => {
     if (err)  return res.send(err);
-    res.send(result);
+    return res.send(result);
   });
 });
 
 router.post('/upload/certificate', uploadStrategy, function(req, res) {
   if (!req.file) return res.send('No file was uploaded');
 
-  console.log(req.file.filename)
-  var imageSrc = imageUrl + req.file.filename;
-
+  console.log(req.file.filename);
+  
   const blobName = getBlobName(req.file.originalname);
-  imageSrc += blobName
+  const imageSrc = imageUrl + blobName;
   const blobService = new BlockBlobClient(process.env.AZURE_STORAGE_CONNECTION_STRING, containerName, blobName);
   const stream = getStream(req.file.buffer);
   const streamLength = req.file.buffer.length;
 
   blobService.uploadStream(stream, streamLength)
     .then(() => {
-          res.render('success', { 
-              message: 'File uploaded to Azure Blob storage.' 
-          });
-        })
-    .catch((err) => { if (err) return res.send(err); })
+      console.log('File uploaded to Azure Blob storage:', blobName);
+    })
+    .catch((err) => { 
+      if (err) return res.send(err); 
+    });
 
   var query = "call sp_add_media(?, ?, ?, ?)";
   var params = [req.body?.business_id, imageSrc, 3, req.body?.expiration_date];
   connection.query(query, params, (err, result) => {
     if (err)  return res.send(err);
-    res.send(result);
+    return res.send(result);
   });
 });
 
 router.post('/upload/logo', uploadStrategy, function(req, res) {
   if (!req.file) return res.send('No file was uploaded');
 
-  console.log(req.file.filename)
-  var imageSrc = imageUrl + req.file.filename;
+  console.log(req.file.filename);
 
   const blobName = getBlobName(req.file.originalname);
-  imageSrc += blobName
+  const imageSrc = imageUrl + blobName;
   const blobService = new BlockBlobClient(process.env.AZURE_STORAGE_CONNECTION_STRING, containerName, blobName);
   const stream = getStream(req.file.buffer);
   const streamLength = req.file.buffer.length;
 
   blobService.uploadStream(stream, streamLength)
     .then(() => {
-          res.render('success', { 
-              message: 'File uploaded to Azure Blob storage.' 
-          });
-        })
-    .catch((err) => { if (err) return res.send(err); })
+      console.log('File uploaded to Azure Blob storage:', blobName);
+    })
+    .catch((err) => {
+      if (err) return res.send(err); 
+    });
 
   var query = "call sp_add_media(?, ?, ?, null)";
   var params = [req.body?.business_id, imageSrc, 1];
   connection.query(query, params, (err, result) => {
     if (err)  return res.send(err);
-    res.send(result);
+    return res.send(result);
   });
 });
 
