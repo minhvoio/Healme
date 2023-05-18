@@ -39,8 +39,8 @@ router.post('/create/monthly', function(req, res) {
         var name = req.body.biz_id.toString() + '_' + 
             planResult[0][0]?.details.replace(' ','').toLowerCase() + '_' + expiration_date.toISOString().split('T')[0];
 
-        var subsQuery = "call sp_create_subscription(?, ?, ?, ?)";
-        var subsParams = [req.body.biz_id, req.body.plan_id, name, expiration_date];
+        var subsQuery = "call sp_create_subscription(?, ?, ?, ?, ?)";
+        var subsParams = [req.body.biz_id, req.body.plan_id, name, expiration_date, req.body.payment_id];
         connection.query(subsQuery, subsParams, function(err, subsResult) {
             if (err) return res.send(subsResult);
             res.send(subsResult);
@@ -59,8 +59,8 @@ router.post('/create/yearly', function(req, res) {
         var name = req.body.biz_id.toString() + '_' + 
             planResult[0][0]?.details.replace(' ','').toLowerCase() + '_' + expiration_date.toISOString().split('T')[0];
 
-        var subsQuery = "call sp_create_subscription(?, ?, ?, ?)";
-        var subsParams = [req.body.biz_id, name, req.body.plan_id, expiration_date];
+        var subsQuery = "call sp_create_subscription(?, ?, ?, ?, ?)";
+        var subsParams = [req.body.biz_id, name, req.body.plan_id, expiration_date, req.body.payment_id];
         connection.query(subsQuery, subsParams, function(err, subsResult) {
             if (err) return res.send(subsResult);
             res.send(subsResult);
@@ -85,8 +85,8 @@ router.post('/update/monthly', function(req, res) {
             var name = req.body.biz_id.toString() + '_' + 
                 planResult[0][0]?.details.replace(' ','').toLowerCase() + '_' + expiration_date.toISOString().split('T')[0];
             
-            var subsQuery = "call sp_update_subscription(?, ?, ?, ?, ?)";
-            var subsParams = [req.body.biz_id, req.body.subs_id, name, req.body.plan_id, expiration_date];
+            var subsQuery = "call sp_update_subscription(?, ?, ?, ?, ?, ?)";
+            var subsParams = [req.body.biz_id, req.body.subs_id, name, req.body.plan_id, expiration_date, req.body.payment_id];
             connection.query(subsQuery, subsParams, function(err, subsResult) {
                 if (err) return res.send(subsResult);
                 res.send(subsResult);
@@ -112,8 +112,8 @@ router.post('/update/yearly', function(req, res) {
             var name = req.body.biz_id.toString() + '_' + 
                 planResult[0][0]?.details.replace(' ','').toLowerCase() + '_' + expiration_date.toISOString().split('T')[0];
             
-            var subsQuery = "call sp_update_subscription(?, ?, ?, ?, ?)";
-            var subsParams = [req.body.biz_id, req.body.subs_id, req.body.plan_id, name, expiration_date];
+            var subsQuery = "call sp_update_subscription(?, ?, ?, ?, ?, ?)";
+            var subsParams = [req.body.biz_id, req.body.subs_id, req.body.plan_id, name, expiration_date, req.body.payment_id];
             connection.query(subsQuery, subsParams, function(err, subsResult) {
                 if (err) return res.send(subsResult);
                 res.send(subsResult);
