@@ -9,7 +9,7 @@ const apiKey = process.env.MAP_API_KEY;
 async function getCoordinates(targets, apiKey) {
   const coordinates = [];
 
-  for (let i = 0; i < targets.length; i++) {
+  for (let i = 0; i < targets?.length; i++) {
     const url = `https://rsapi.goong.io/Geocode?address=${targets[i]}&api_key=${apiKey}`;
     const response = await fetch(url);
     const data = await response.json();
@@ -32,8 +32,7 @@ async function getDrivingDistance(origin, destination, apiKey) {
   const url = `https://rsapi.goong.io/DistanceMatrix?origins=${origin}&destinations=${destination}&vehicle=car&api_key=${apiKey}`;
   const response = await fetch(url);
   const data = await response.json();
-
-  if (data.rows[0] != null) {
+  if (data?.rows[0] != null) {
     return data.rows[0].elements;
   } else console.log(`Can't find the place`);
 }
