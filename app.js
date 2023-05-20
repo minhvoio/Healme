@@ -24,6 +24,7 @@ var mapRouter = require("./routes/map");
 var chatbotRouter = require("./routes/chatbot");
 
 var mediaRouter = require("./routes/media");
+var subscriptionRouter = require("./routes/subscription");
 
 const { config } = require("process");
 
@@ -58,6 +59,8 @@ app.use("/chatbot", chatbotRouter);
 app.use("/business", businessRouter);
 
 app.use("/media", mediaRouter);
+
+app.use("/subscription", subscriptionRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

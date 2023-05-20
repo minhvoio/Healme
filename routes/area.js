@@ -55,4 +55,13 @@ router.get('/ward/:wardid', function(req, res) {
     });
 });
 
+router.get('/address/:address_id', function(req, res) {
+    var query = "call sp_address_details(?);"
+    var params = req.params.address_id;
+    connection.query(query, params, function(err, result) {
+        if (err) return res.send(err);
+        res.send(result);
+    });
+});
+
 module.exports = router;
