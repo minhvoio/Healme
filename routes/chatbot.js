@@ -26,7 +26,7 @@ async function generateResponse(question, maxWords = 3500, creativity = 0.7) {
     ],
   });
   const result = completion.data.choices[0].message;
-  return { result, language };
+  return result;
 }
 
 function detectLanguage(question) {
