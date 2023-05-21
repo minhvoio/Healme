@@ -70,12 +70,8 @@ router.post("/", async (req, res) => {
   const question = req.body.question;
   const maxWords = req.body.maxWords;
   const creativity = req.body.creativity;
-  const { result, language } = await generateResponse(
-    question,
-    maxWords,
-    creativity
-  );
-  res.send({ result, language });
+  const result = await generateResponse(question, maxWords, creativity);
+  res.send(result);
 });
 
 module.exports = router;
