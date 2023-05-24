@@ -43,6 +43,44 @@ router.post('/:pres_id/api/add', verifyToken, function(req, res, next) {
   });
 });
 
+router.post('/order', async function(req, res) {
+  var query = "call sp_order_medicine(?, ?)";
+  var params = [req.body.prescription_id, req.body.pharmacy_id];
+  connection.query(query, params, async function(err, result) {
+    if (err) return res.send(err);
+    if (result[0][0]?.missing != null)
+    {
+      var ids = JSON.parse('[' + result[0][0]?.missing + ']');
+      result[0][0].missing_id = ids;
+    }
+    res.send(result);
+  })
+});
+
+router.post('/order/:order_id/cancel', async function(req, res) {
+  var query = "call sp_cancel_order(?)";
+  connection.query(query, req.params.order_id, async function(err, result) {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+});
+
+router.get('/order/:order_id', async function(req, res) {
+  var orderQuery = "call sp_get_order(?)";
+  connection.query(orderQuery, req.params.order_id, async function(err, orderResult) {
+    if (err) return res.send(err);
+
+    var detailsQuery = "call sp_order_details(?)"
+    connection.query(detailsQuery, req.params.order_id, async function(err, detailsResult) {
+      if (err) return res.send(err);
+
+      orderResult[0][0].details = detailsResult[0];
+      
+      res.send(orderResult);
+    });
+  });
+})
+
 router.post('/:pres_id/api/update', function(req,res) {
   var clear_query = 'call sp_clear_prescription(?)';
   connection.query(clear_query, req.params.pres_id, function(clearErr, clearResult) {
