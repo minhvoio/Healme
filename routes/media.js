@@ -126,4 +126,13 @@ router.post('/delete/id/:id', async function(req, res)
   })
 })
 
+router.post('/update/status/:id', async function(req, res) {
+  var query = 'call sp_update_media_status(?, ?)';
+  var params = [req.params.id, req.body.status];
+  connection.query(query, params, async function(err, result) {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+})
+
 module.exports = router;
