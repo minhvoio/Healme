@@ -130,4 +130,20 @@ router.post('/api/delete/:pd_id', verifyToken, function(req, res) {
   });
 });
 
+router.get('/order/pharmacy/:id', async function(req,res) {
+  var query = "call sp_order_by_pharmacy(?)";
+  connection.query(query, req.params.id, async function(err, result) {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+});
+
+router.post('/order/:id/update/status', async function(req, res) {
+  var query = "call sp_order_update_status(?)";
+  connection.query(query, req.params.id, async function(err, result) {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+});
+
 module.exports = router;
