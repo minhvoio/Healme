@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const connection = require("../models/dbconfig");
 const transporter = require("../models/mailer");
 const app_email = "healme.vn@gmail.com";
-const request = require('request');
+const request = require("request");
 const verifyToken = require("../middlewares/verifyToken");
 require("dotenv").config();
 
@@ -14,51 +14,53 @@ const payload = {
 };
 const token = jwt.sign(payload, process.env.API_SECRET); //your API SECRET HERE
 
-router.get("/api/create-meeting/", function(req, res){
+router.get("/api/create-meeting/", function (req, res) {
   const clientID = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
-  const accountID = process.env.ACCOUNT_ID
+  const accountID = process.env.ACCOUNT_ID;
   var options = {
-    method: 'POST',
-    url: 'https://zoom.us/oauth/token',
+    method: "POST",
+    url: "https://zoom.us/oauth/token",
     qs: {
-      grant_type: 'account_credentials',
+      grant_type: "account_credentials",
       account_id: accountID,
     },
     headers: {
-      Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+      Authorization:
+        "Basic " +
+        Buffer.from(clientID + ":" + clientSecret).toString("base64"),
     },
-    json: true
+    json: true,
   };
   request(options, function (error, response, body) {
     if (error) return error;
-      console.log(body);
-      var accessToken = body.access_token;
-      var meeting_options = {
-        method: 'POST',
-        headers: {
-          authorization: 'Bearer ' + accessToken,
+    console.log(body);
+    var accessToken = body.access_token;
+    var meeting_options = {
+      method: "POST",
+      headers: {
+        authorization: "Bearer " + accessToken,
+      },
+      uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
+      body: {
+        topic: "Zoom Meeting", //meeting title
+        type: 1,
+        settings: {
+          join_before_host: true,
+          waiting_room: false,
+          mute_upon_entry: false,
+          participant_video: true,
+          host_video: true,
         },
-        uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
-        body: {
-          topic: "Zoom Meeting", //meeting title
-          type: 1,
-          settings: {
-            join_before_host: true,
-            waiting_room: false,
-            mute_upon_entry: false,
-            participant_video: true,
-            host_video: true,
-          },
-        },
-        json: true
-      };
+      },
+      json: true,
+    };
 
-      request(meeting_options, function (error, response, body) {
-        if (error) return new Error(error);
-        console.log(body.join_url);
-        res.send(body);
-      });
+    request(meeting_options, function (error, response, body) {
+      if (error) return new Error(error);
+      console.log(body.join_url);
+      res.send(body);
+    });
   });
 });
 
@@ -98,7 +100,7 @@ router.get("/time/:id", function (req, res) {
   });
 });
 
-router.post("/api/create", verifyToken, function (req, res) {
+router.post("/api/create", function (req, res) {
   var appt_query = "call sp_doctor_appointment(?,?,?,?)";
   var appt_params = [
     req.body.pt_id,
@@ -126,19 +128,21 @@ router.post("/api/create", verifyToken, function (req, res) {
 
       const clientID = process.env.CLIENT_ID;
       const clientSecret = process.env.CLIENT_SECRET;
-      const accountID = process.env.ACCOUNT_ID
+      const accountID = process.env.ACCOUNT_ID;
 
       var options = {
-        method: 'POST',
-        url: 'https://zoom.us/oauth/token',
+        method: "POST",
+        url: "https://zoom.us/oauth/token",
         qs: {
-          grant_type: 'account_credentials',
+          grant_type: "account_credentials",
           account_id: accountID,
         },
         headers: {
-          Authorization: 'Basic ' + Buffer.from(clientID + ':' + clientSecret).toString('base64'),
+          Authorization:
+            "Basic " +
+            Buffer.from(clientID + ":" + clientSecret).toString("base64"),
         },
-        json: true
+        json: true,
       };
       request(options, function (error, response, body) {
         if (error) return res.send(error);
@@ -146,9 +150,9 @@ router.post("/api/create", verifyToken, function (req, res) {
         var accessToken = body.access_token;
 
         var meeting_options = {
-          method: 'POST',
+          method: "POST",
           headers: {
-            authorization: 'Bearer ' + accessToken,
+            authorization: "Bearer " + accessToken,
           },
           uri: "https://api.zoom.us/v2/users/" + app_email + "/meetings",
           body: {
@@ -162,50 +166,65 @@ router.post("/api/create", verifyToken, function (req, res) {
               host_video: true,
             },
           },
-          json: true
+          json: true,
         };
         request(meeting_options, function (error, response, body) {
           if (error) return res.send(error);
-          
+
           result[0][0].meeting = {
             start_url: body.start_url,
             join_url: body.join_url,
             topic: body.topic,
-            timezone: body.timezone
+            timezone: body.timezone,
           };
           var meeting_url = body.start_url;
 
-          var update_query = "update doctor_appointment set meeting_url = ? where id = ?";
+          var update_query =
+            "update doctor_appointment set meeting_url = ? where id = ?";
           var update_params = [meeting_url, appt_id];
-          connection.query(update_query, update_params, function (err, updateResult) {
-            if (err) return res.send(err);
-          });
+          connection.query(
+            update_query,
+            update_params,
+            function (err, updateResult) {
+              if (err) return res.send(err);
+            }
+          );
 
           var pt_email;
           var pt_query = "call sp_patient_email(?)";
-          connection.query(pt_query, req.body.pt_id, function (err, queryResult) {
-            if (err) return res.send(err);
-            pt_email = queryResult[0][0].email;
+          connection.query(
+            pt_query,
+            req.body.pt_id,
+            function (err, queryResult) {
+              if (err) return res.send(err);
+              pt_email = queryResult[0][0].email;
 
-            var mailOptions = {
-              from: "noreply@domain.com",
-              to: [app_email, pt_email, biz_email].join(", "),
-              subject: "Xác nhận đặt lịch thành công",
-              text: "Confirmation Notice",
+              var mailOptions = {
+                from: "noreply@domain.com",
+                to: [app_email, pt_email, biz_email].join(", "),
+                subject: "Xác nhận đặt lịch thành công",
+                text: "Confirmation Notice",
                 html:
                   "<p>Xác nhận đặt lịch khám thành công</b>" +
-                  "<ul><li>Phòng khám: " + biz_name +
-                  "</li><li>Email: " + biz_email +
-                  "</li><li>Link: " + meeting_url +
+                  "<ul><li>Phòng khám: " +
+                  biz_name +
+                  "</li><li>Email: " +
+                  biz_email +
+                  "</li><li>Link: " +
+                  meeting_url +
                   "</li>" +
-                  "<li>Thời gian: " + appt_hour + " Ngày: " + appt_day +
+                  "<li>Thời gian: " +
+                  appt_hour +
+                  " Ngày: " +
+                  appt_day +
                   "</li></ul>",
-            };
-            transporter.sendMail(mailOptions, function (mailErr, mailResult) {
-              if (err) return mailErr;
-              else console.log('Message Sent: ', mailResult.response);
-            });
-          });
+              };
+              transporter.sendMail(mailOptions, function (mailErr, mailResult) {
+                if (err) return mailErr;
+                else console.log("Message Sent: ", mailResult.response);
+              });
+            }
+          );
 
           res.send(result);
         });
