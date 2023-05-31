@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config({ path: "local.env" });
 var connection = require("../models/dbconfig");
 const apiKey = process.env.MAP_API_KEY;
+const axios = require('axios');
 
 async function getCoordinates(targets, apiKey) {
   const coordinates = [];
@@ -35,6 +36,51 @@ async function getDrivingDistance(origin, destination, apiKey) {
   if (data?.rows[0] != null) {
     return data.rows[0].elements;
   } else console.log(`Can't find the place`);
+}
+
+async function getGeoCode (address) {
+  const options = {
+    method: 'GET',
+    url: 'https://google-maps-geocoding3.p.rapidapi.com/geocode',
+    params: {
+      address
+    },
+    headers: {
+      'X-RapidAPI-Key': 'ebd3910c75msh01377f28f3ce736p111713jsnabb04ac1a8da',
+      'X-RapidAPI-Host': 'google-maps-geocoding3.p.rapidapi.com'
+    }
+  };
+  
+  try {
+    const response = await axios.request(options);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function calcDistance(firstAddress, secondAddress) {
+  const options = {
+    method: 'GET',
+    url: 'https://distance-calculator8.p.rapidapi.com/calc',
+    params: {
+      startLatitude: firstAddress.latitude,
+      startLongitude: firstAddress.longitude,
+      endLatitude: secondAddress.latitude,
+      endLongitude: secondAddress.longitude
+    },
+    headers: {
+      'X-RapidAPI-Key': 'ebd3910c75msh01377f28f3ce736p111713jsnabb04ac1a8da',
+      'X-RapidAPI-Host': 'distance-calculator8.p.rapidapi.com'
+    }
+  };
+  
+  try {
+    const response = await axios.request(options);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 router.post("/", async (req, res) => {
@@ -82,12 +128,15 @@ router.post("/", async (req, res) => {
           var updateQuery = `UPDATE users SET last_login = now() WHERE id = '${result[0].id}'`;
           connection.query(updateQuery, async (updateErr, updateRes) => {
             if (updateErr) return res.send(updateErr);
-            const address = result[0].fulladdress;
-            const ori = await getCoordinates(address, apiKey);
-            const dest = await getCoordinates(req.body.destinations, apiKey);
-
-            const output = await getDrivingDistance(ori, dest, apiKey);
-            return res.status(200).send(output);
+            const userAddress = result[0].fulladdress;
+            const businessAddress = req.body.destinations[0];
+            const userAddressGeoCode = await getGeoCode(userAddress);
+            const businessAddressGeoCode = await getGeoCode(businessAddress);
+            const distance = await calcDistance(userAddressGeoCode, businessAddressGeoCode);
+            // const ori = await getCoordinates(address, apiKey);
+            // const dest = await getCoordinates(req.body.destinations, apiKey);
+            // const output = await getDrivingDistance(ori, dest, apiKey);
+            return res.status(200).send(distance.body);
           });
         }
       );
