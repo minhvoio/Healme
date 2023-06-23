@@ -38,7 +38,7 @@ async function getDrivingDistance(origin, destination, apiKey) {
   } else console.log(`Can't find the place`);
 }
 
-async function getGeoCode (address) {
+async function getGeoCode(address) {
   const options = {
     method: 'GET',
     url: 'https://google-maps-geocoding3.p.rapidapi.com/geocode',
@@ -50,7 +50,7 @@ async function getGeoCode (address) {
       'X-RapidAPI-Host': 'google-maps-geocoding3.p.rapidapi.com'
     }
   };
-  
+
   try {
     const response = await axios.request(options);
     return response.data;
@@ -74,7 +74,7 @@ async function calcDistance(firstAddress, secondAddress) {
       'X-RapidAPI-Host': 'distance-calculator8.p.rapidapi.com'
     }
   };
-  
+
   try {
     const response = await axios.request(options);
     return response.data;
