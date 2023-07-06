@@ -34,7 +34,7 @@ router.get("/api/create-meeting/", function (req, res) {
   };
   request(options, function (error, response, body) {
     if (error) return error;
-    console.log(body);
+    // console.log(body);
     var accessToken = body.access_token;
     var meeting_options = {
       method: "POST",
@@ -58,7 +58,7 @@ router.get("/api/create-meeting/", function (req, res) {
 
     request(meeting_options, function (error, response, body) {
       if (error) return new Error(error);
-      console.log(body.join_url);
+      // console.log(body.join_url);
       res.send(body);
     });
   });
