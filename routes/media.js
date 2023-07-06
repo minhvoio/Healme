@@ -24,7 +24,8 @@ router.get('/get/id/:id', async function(req, res) {
   var query = 'call sp_get_media(?)';
   connection.query(query, req.params.id, async function(err, queryResult) {
     if (err) return res.send(err);
-    if (queryResult[0][0]?.url != null) queryResult[0][0].url = imageUrl + queryResult[0][0].url;
+    if (queryResult[0][0]?.url != null) 
+      queryResult[0][0].url = imageUrl + queryResult[0][0].url;
     res.send(queryResult);
   });
 });
@@ -33,7 +34,9 @@ router.get('/get/business/:id', async function(req, res) {
   var query = 'call sp_get_media_by_business(?)';
   connection.query(query, req.params.id, async function(err, queryResult) {
     if (err) return res.send(err);
-    if (queryResult[0][0]?.url != null) queryResult[0][0].url = imageUrl + queryResult[0][0].url;
+    queryResult[0].forEach(element => {
+      element.url = imageUrl + element.url;
+    });
     res.send(queryResult);
   });
 });
