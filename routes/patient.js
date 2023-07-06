@@ -13,7 +13,7 @@ router.get("/:patientid", verifyToken, function (req, res) {
   connection.query(query, req.params.patientid, function (err, result) {
     if (err) {
       return res.send(err);
-  }
+    }
     res.send(result);
   });
 });
@@ -34,7 +34,7 @@ router.post("/api/create", function (req, res) {
   });
 });
 
-router.get("/:id/prescription", verifyToken, function (req, res) {
+router.get("/:id/prescription", function (req, res) {
   var query = "call sp_view_prescription(?)";
   var params = req.params.id;
   connection.query(query, params, function (err, result) {
