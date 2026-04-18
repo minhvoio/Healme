@@ -4,17 +4,20 @@ const fileUpload = require('express-fileupload');
 const path = require('path');
 var connection = require("../models/dbconfig");
 
-router.use(fileUpload());
+const parseSingleImageUpload = fileUpload();
 const uploadStrategy = (req, res, next) => {
-  if (!req.files?.image) return next();
+  parseSingleImageUpload(req, res, (uploadError) => {
+    if (uploadError) return res.status(400).send('Invalid file upload request');
+    if (!req.files?.image) return next();
 
-  const image = Array.isArray(req.files.image) ? req.files.image[0] : req.files.image;
-  req.file = {
-    originalname: image.name,
-    buffer: image.data
-  };
+    const image = Array.isArray(req.files.image) ? req.files.image[0] : req.files.image;
+    req.file = {
+      originalname: image.name,
+      buffer: image.data
+    };
 
-  next();
+    next();
+  });
 };
 const { BlockBlobClient } = require('@azure/storage-blob');
 const getStream = require('into-stream');
@@ -72,7 +75,7 @@ router.post('/upload/photo', uploadStrategy, async function(req, res) {
   var query = "call sp_add_media(?, ?, ?, null)";
   var params = [req.body?.business_id, blobName, 2];
   connection.query(query, params, (err, result) => {
-    if (err)  return res.send(err);
+    if (err) return res.status(500).send('Database error');
     return res.send(result);
   });
 });
@@ -100,7 +103,7 @@ router.post('/upload/certificate', uploadStrategy, async function(req, res) {
   var query = "call sp_add_media(?, ?, ?, ?)";
   var params = [req.body?.business_id, blobName, 3, req.body?.expiration_date];
   connection.query(query, params, (err, result) => {
-    if (err)  return res.send(err);
+    if (err) return res.status(500).send('Database error');
     return res.send(result);
   });
 });
@@ -126,7 +129,7 @@ router.post('/upload/logo', uploadStrategy, async function(req, res) {
   var query = "call sp_add_media(?, ?, ?, null)";
   var params = [req.body?.business_id, blobName, 1];
   connection.query(query, params, (err, result) => {
-    if (err)  return res.send(err);
+    if (err) return res.status(500).send('Database error');
     return res.send(result);
   });
 });
