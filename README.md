@@ -5,7 +5,7 @@ It provides core services for user management, appointments, prescriptions, sear
 
 ## About
 
-Healthcare service platform backend for managing users, appointments, prescriptions, pharmacies, clinics, subscriptions, and media with MySQL and Express.js.
+Healme Backend powers a digital care ecosystem focused on easier healthcare access for patients and operational tools for clinics and pharmacies.
 
 ## Key Features
 
