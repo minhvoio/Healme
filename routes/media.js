@@ -1,11 +1,35 @@
 var express = require('express');
 var router = express.Router();
-const multer = require('multer');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 var connection = require("../models/dbconfig");
+const allowedMimeTypes = new Set(['image/png', 'image/jpeg']);
 
-const inMemoryStorage = multer.memoryStorage();
-const uploadStrategy = multer({ storage: inMemoryStorage }).single('image');
+const parseSingleImageUpload = fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+const uploadStrategy = (req, res, next) => {
+  parseSingleImageUpload(req, res, (uploadError) => {
+    if (uploadError) {
+      console.error(uploadError);
+      if (uploadError.code === 'LIMIT_FILE_SIZE') return res.status(400).send('File size exceeds 5MB limit');
+      return res.status(400).send('Invalid file upload request');
+    }
+    if (!req.files?.image) return next();
+
+    const image = Array.isArray(req.files.image) ? req.files.image[0] : req.files.image;
+    if (!allowedMimeTypes.has(image.mimetype)) {
+      return res.status(400).send('Only PNG and JPEG files are allowed');
+    }
+
+    req.file = {
+      originalname: image.name,
+      buffer: image.data
+    };
+
+    next();
+  });
+};
 const { BlockBlobClient } = require('@azure/storage-blob');
 const getStream = require('into-stream');
 
@@ -62,7 +86,10 @@ router.post('/upload/photo', uploadStrategy, async function(req, res) {
   var query = "call sp_add_media(?, ?, ?, null)";
   var params = [req.body?.business_id, blobName, 2];
   connection.query(query, params, (err, result) => {
-    if (err)  return res.send(err);
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Database error');
+    }
     return res.send(result);
   });
 });
@@ -90,7 +117,10 @@ router.post('/upload/certificate', uploadStrategy, async function(req, res) {
   var query = "call sp_add_media(?, ?, ?, ?)";
   var params = [req.body?.business_id, blobName, 3, req.body?.expiration_date];
   connection.query(query, params, (err, result) => {
-    if (err)  return res.send(err);
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Database error');
+    }
     return res.send(result);
   });
 });
@@ -116,7 +146,10 @@ router.post('/upload/logo', uploadStrategy, async function(req, res) {
   var query = "call sp_add_media(?, ?, ?, null)";
   var params = [req.body?.business_id, blobName, 1];
   connection.query(query, params, (err, result) => {
-    if (err)  return res.send(err);
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Database error');
+    }
     return res.send(result);
   });
 });
