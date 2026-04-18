@@ -3,7 +3,7 @@ var router = express.Router();
 const fileUpload = require('express-fileupload');
 const path = require('path');
 var connection = require("../models/dbconfig");
-const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/jpg']);
+const allowedMimeTypes = new Set(['image/png', 'image/jpeg']);
 
 const parseSingleImageUpload = fileUpload({
   limits: { fileSize: 5 * 1024 * 1024 }
