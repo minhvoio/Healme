@@ -3,17 +3,21 @@ var router = express.Router();
 const fileUpload = require('express-fileupload');
 const path = require('path');
 var connection = require("../models/dbconfig");
+const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/jpg']);
 
 const parseSingleImageUpload = fileUpload({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 const uploadStrategy = (req, res, next) => {
   parseSingleImageUpload(req, res, (uploadError) => {
-    if (uploadError) return res.status(400).send('Invalid file upload request');
+    if (uploadError) {
+      console.error(uploadError);
+      if (uploadError.code === 'LIMIT_FILE_SIZE') return res.status(400).send('File size exceeds 5MB limit');
+      return res.status(400).send('Invalid file upload request');
+    }
     if (!req.files?.image) return next();
 
     const image = Array.isArray(req.files.image) ? req.files.image[0] : req.files.image;
-    const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/jpg']);
     if (!allowedMimeTypes.has(image.mimetype)) {
       return res.status(400).send('Only PNG and JPEG files are allowed');
     }
