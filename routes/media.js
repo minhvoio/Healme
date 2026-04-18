@@ -1,11 +1,21 @@
 var express = require('express');
 var router = express.Router();
-const multer = require('multer');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 var connection = require("../models/dbconfig");
 
-const inMemoryStorage = multer.memoryStorage();
-const uploadStrategy = multer({ storage: inMemoryStorage }).single('image');
+router.use(fileUpload());
+const uploadStrategy = (req, res, next) => {
+  if (!req.files?.image) return next();
+
+  const image = Array.isArray(req.files.image) ? req.files.image[0] : req.files.image;
+  req.file = {
+    originalname: image.name,
+    buffer: image.data
+  };
+
+  next();
+};
 const { BlockBlobClient } = require('@azure/storage-blob');
 const getStream = require('into-stream');
 
